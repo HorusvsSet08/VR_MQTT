@@ -4,34 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Estación Horus - VR</title>
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  <!-- Librerías locales -->
+  <script src="js/aframe.min.js"></script>
+  <script src="js/mqttws31.min.js"></script>
   <style>
-    #connection-status {
+    #connection-panel {
       position: absolute;
       top: 10px;
       right: 10px;
       color: white;
-      font-family: Arial, sans-serif;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 8px 12px;
-      border-radius: 8px;
+      font-family: 'Arial', sans-serif;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px 15px;
+      border-radius: 10px;
       font-size: 14px;
       z-index: 1000;
+      width: 200px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .status-row {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      margin-bottom: 4px;
     }
     .led {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #f00;
       display: inline-block;
-      transition: background 0.3s;
+      margin-right: 8px;
     }
-    .led.connected {
+    .led.green {
       background: #0f0;
+    }
+    .value {
+      font-weight: bold;
+      color: #8ef;
     }
     body {
       margin: 0;
@@ -40,23 +49,23 @@
   </style>
 </head>
 <body>
-  <!-- Indicador de conexión -->
-  <div id="connection-status">
-    <span class="led" id="led"></span>
-    <span id="status-text">Conectando...</span>
+  <!-- Panel de conexión y estado -->
+  <div id="connection-panel">
+    <div class="status-row">
+      <span>Estado:</span>
+      <span id="status-text">Conectando...</span>
+    </div>
+    <div class="status-row">
+      <span><span class="led" id="led"></span>MQTT</span>
+    </div>
   </div>
 
-  <!-- Escena VR con soporte para WebXR y giroscopio -->
+  <!-- Escena VR -->
   <a-scene vr-mode-ui="enabled: true" device-orientation-permission-ui="enabled: false">
-    
-    <!-- Cámara con cursor por mirada -->
+    <!-- Cámara con control por giroscopio -->
     <a-entity position="0 1.6 4">
       <a-camera>
-        <a-cursor 
-          fuse="false" 
-          color="#FF4444"
-          raycaster="objects: .clickable">
-        </a-cursor>
+        <a-cursor fuse="false" color="#FF4444"></a-cursor>
       </a-camera>
     </a-entity>
 
@@ -65,65 +74,212 @@
     <a-light type="directional" color="#FFF" position="0 5 5"></a-light>
 
     <!-- Suelo -->
-    <a-plane rotation="-90 0 0" width="20" height="20" color="#AAA" opacity="0.2" transparent="true"></a-plane>
+    <a-plane rotation="-90 0 0" width="30" height="30" color="#AAA" opacity="0.1" transparent="true"></a-plane>
 
     <!-- Título -->
-    <a-text value="Estación Horus VVB" color="#FFF" position="0 2.2 -3" align="center" width="10"></a-text>
+    <a-text value="Estación Horus VVB" color="#FFF" position="0 2.4 -3" align="center" width="12"></a-text>
 
-    <!-- Datos: ej. temperatura -->
-    <a-box id="temp-bar" position="-3 1 -3" depth="0.2" width="0.5" color="#FF4444" visible="false"></a-box>
-    <a-text id="temp-text" value="Temp: --°C" position="-3 0.5 -3" color="#DDD" align="center"></a-text>
+    <!-- Datos: Temperatura -->
+    <a-box id="temp-bar" position="-4 1 -3" depth="0.2" width="0.5" color="#FF4444" visible="false"></a-box>
+    <a-text id="temp-text" value="🌡️ Temp: --°C" position="-4 0.5 -3" color="#DDD" align="center"></a-text>
 
-    <!-- Más elementos... (como en tu versión) -->
+    <!-- Humedad -->
+    <a-box id="hum-bar" position="-2 1 -3" depth="0.2" width="0.5" color="#4444FF" visible="false"></a-box>
+    <a-text id="hum-text" value="💧 Humedad: --%" position="-2 0.5 -3" color="#DDD" align="center"></a-text>
+
+    <!-- Presión -->
+    <a-box id="press-bar" position="0 1 -3" depth="0.2" width="0.5" color="#AAAAAA" visible="false"></a-box>
+    <a-text id="press-text" value="🔽 Presión: -- hPa" position="0 0.5 -3" color="#DDD" align="center"></a-text>
+
+    <!-- Altitud -->
+    <a-box id="alt-bar" position="2 1 -3" depth="0.2" width="0.5" color="#AA66AA" visible="false"></a-box>
+    <a-text id="alt-text" value="⛰️ Altitud: -- m" position="2 0.5 -3" color="#DDD" align="center"></a-text>
+
+    <!-- PM2.5 -->
+    <a-box id="pm25-bar" position="4 1 -3" depth="0.2" width="0.5" color="#FF8800" visible="false"></a-box>
+    <a-text id="pm25-text" value="🌫️ PM2.5: -- μg/m³" position="4 0.5 -3" color="#DDD" align="center"></a-text>
+
+    <!-- PM10 -->
+    <a-box id="pm10-bar" position="-3 1 -6" depth="0.2" width="0.5" color="#FF6666" visible="false"></a-box>
+    <a-text id="pm10-text" value="🌫️ PM10: -- μg/m³" position="-3 0.5 -6" color="#DDD" align="center"></a-text>
+
+    <!-- Dirección del viento -->
+    <a-entity id="wind-arrow" position="-1 1 -6" visible="false">
+      <a-cone color="#FF00FF" radius-bottom="0.2" height="0.8" rotation="-90 0 0"></a-cone>
+      <a-cylinder color="#FF00FF" radius="0.05" height="1.2" rotation="-90 0 0" position="0 0 -0.6"></a-cylinder>
+    </a-entity>
+    <a-text id="winddir-text" value="🧭 Dir: --°" position="-1 0.5 -6" color="#DDD" align="center"></a-text>
+
+    <!-- Velocidad del viento -->
+    <a-box id="wind-bar" position="1 1 -6" depth="0.2" width="0.5" color="#00FF00" visible="false"></a-box>
+    <a-text id="wind-text" value="💨 Viento: -- m/s" position="1 0.5 -6" color="#DDD" align="center"></a-text>
+
+    <!-- Gas -->
+    <a-box id="gas-bar" position="3 1 -6" depth="0.2" width="0.5" color="#FFFF00" visible="false"></a-box>
+    <a-text id="gas-text" value="⛽ Gas: -- kΩ" position="3 0.5 -6" color="#DDD" align="center"></a-text>
+
+    <!-- Lluvia -->
+    <a-cone id="rain-cone" position="0 1 -9" radius-bottom="0.5" height="1" color="#6688FF" visible="false"></a-cone>
+    <a-text id="rain-text" value="🌧️ Lluvia: no" position="0 0.5 -9" color="#DDD" align="center"></a-text>
   </a-scene>
 
   <script>
-    // ✅ CORREGIDO: Usa WSS (puerto 8884) para conexión segura
+    // Configuración MQTT
     const broker = "broker.hivemq.com";
-    const port = 8884; // ✅ WSS (WebSocket Secure), no 8080
-    const clientId = "vr-horus-" + Math.random().toString(16).substr(2, 8);
-    const client = new Paho.MQTT.Client(broker, port, "/mqtt", clientId); // Nota: ruta "/mqtt" requerida
+    const port = 8884; // WSS (seguro)
+    const clientId = "vr-horus-display-" + Math.random().toString(16).substr(2, 8);
+    const client = new Paho.MQTT.Client(broker, port, "/mqtt", clientId);
 
-    // UI
+    // Elementos UI
     const led = document.getElementById("led");
     const statusText = document.getElementById("status-text");
 
-    function setConnected(connected) {
-      if (connected) {
-        led.classList.add("connected");
+    // Función para actualizar barras
+    function updateBar(barId, value, max) {
+      const bar = document.getElementById(barId);
+      const height = Math.max(0.1, value / max);
+      bar.setAttribute("height", height);
+      bar.setAttribute("position", { y: height / 2, z: -3 });
+      bar.setAttribute("visible", true);
+    }
+
+    // Indicador de conexión
+    function setConnected(isConnected) {
+      if (isConnected) {
+        led.classList.add("green");
         statusText.textContent = "Conectado ✅";
       } else {
-        led.classList.remove("connected");
+        led.classList.remove("green");
         statusText.textContent = "Sin conexión ❌";
       }
     }
 
+    // Eventos MQTT
     client.onConnectionLost = (responseObject) => {
-      console.log("Conexión perdida: " + responseObject.errorMessage);
       setConnected(false);
+      if (responseObject.errorCode !== 0) {
+        console.log("Conexión MQTT perdida: " + responseObject.errorMessage);
+      }
     };
 
     client.onMessageArrived = (message) => {
-      console.log("Mensaje: " + message.payloadString + " en " + message.destinationName);
-      // Aquí actualizas tus elementos (como antes)
+      const topic = message.destinationName;
+      const payload = message.payloadString.trim();
+
+      // Actualiza texto y barra según el tópico
+      switch (topic) {
+        case "horus/vvb/temperatura":
+          const temp = parseFloat(payload);
+          if (!isNaN(temp)) {
+            document.getElementById("temp-text").setAttribute("value", `🌡️ Temp: ${temp.toFixed(1)}°C`);
+            updateBar("temp-bar", temp, 50);
+          }
+          break;
+
+        case "horus/vvb/humedad":
+          const hum = parseFloat(payload);
+          if (!isNaN(hum)) {
+            document.getElementById("hum-text").setAttribute("value", `💧 Humedad: ${hum.toFixed(1)}%`);
+            updateBar("hum-bar", hum, 100);
+          }
+          break;
+
+        case "horus/vvb/presion":
+          const press = parseFloat(payload);
+          if (!isNaN(press)) {
+            document.getElementById("press-text").setAttribute("value", `🔽 Presión: ${press.toFixed(1)} hPa`);
+            updateBar("press-bar", press / 10, 100); // escala relativa
+          }
+          break;
+
+        case "horus/vvb/altitud":
+          const alt = parseFloat(payload);
+          if (!isNaN(alt)) {
+            document.getElementById("alt-text").setAttribute("value", `⛰️ Altitud: ${alt.toFixed(1)} m`);
+            updateBar("alt-bar", alt / 100, 100);
+          }
+          break;
+
+        case "horus/vvb/pm25":
+          const pm25 = parseFloat(payload);
+          if (!isNaN(pm25)) {
+            document.getElementById("pm25-text").setAttribute("value", `🌫️ PM2.5: ${pm25} μg/m³`);
+            updateBar("pm25-bar", pm25, 100);
+          }
+          break;
+
+        case "horus/vvb/pm10":
+          const pm10 = parseFloat(payload);
+          if (!isNaN(pm10)) {
+            document.getElementById("pm10-text").setAttribute("value", `🌫️ PM10: ${pm10} μg/m³`);
+            updateBar("pm10-bar", pm10, 150);
+          }
+          break;
+
+        case "horus/vvb/wind_direction":
+          const dir = parseFloat(payload);
+          if (!isNaN(dir)) {
+            document.getElementById("winddir-text").setAttribute("value", `🧭 Dir: ${dir.toFixed(1)}°`);
+            document.getElementById("wind-arrow").setAttribute("rotation", { y: -dir });
+            document.getElementById("wind-arrow").setAttribute("visible", true);
+          }
+          break;
+
+        case "horus/vvb/wind_speed":
+          const wind = parseFloat(payload);
+          if (!isNaN(wind)) {
+            document.getElementById("wind-text").setAttribute("value", `💨 Viento: ${wind.toFixed(1)} m/s`);
+            updateBar("wind-bar", wind, 20);
+          }
+          break;
+
+        case "horus/vvb/gas":
+          const gas = parseFloat(payload);
+          if (!isNaN(gas)) {
+            document.getElementById("gas-text").setAttribute("value", `⛽ Gas: ${gas.toFixed(1)} kΩ`);
+            updateBar("gas-bar", gas / 100, 10);
+          }
+          break;
+
+        case "horus/vvb/lluvia":
+          const raining = ["1", "true", "si", "yes", "rain"].includes(payload.toLowerCase());
+          document.getElementById("rain-cone").setAttribute("visible", raining);
+          document.getElementById("rain-text").setAttribute("value", `🌧️ Lluvia: ${raining ? "sí" : "no"}`);
+          break;
+      }
+
+      // Actualiza estado a "conectado" al recibir cualquier dato
       setConnected(true);
     };
 
-    // Conectar
+    // Conectar al cargar
     window.addEventListener("load", () => {
       client.connect({
+        useSSL: true,
         onSuccess: () => {
           console.log("✅ Conectado a broker.hivemq.com (WSS)");
           setConnected(true);
-          client.subscribe("horus/vvb/temperatura");
-          client.subscribe("horus/vvb/humedad");
-          // Suscribe a más tópicos...
+          // Suscribirse a todos los topics
+          [
+            "horus/vvb/temperatura",
+            "horus/vvb/humedad",
+            "horus/vvb/presion",
+            "horus/vvb/altitud",
+            "horus/vvb/pm25",
+            "horus/vvb/pm10",
+            "horus/vvb/wind_direction",
+            "horus/vvb/wind_speed",
+            "horus/vvb/gas",
+            "horus/vvb/lluvia"
+          ].forEach(topic => {
+            client.subscribe(topic);
+            console.log("Suscrito a:", topic);
+          });
         },
         onFailure: (error) => {
-          console.error("❌ Error al conectar:", error);
           setConnected(false);
-        },
-        useSSL: true // ✅ Obligatorio para WSS
+          console.error("❌ Error al conectar a MQTT:", error);
+        }
       });
     });
   </script>
