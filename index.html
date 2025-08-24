@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estación Horus - VR (Giroscopio)</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  <style>
+    #connection-status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: white;
+      font-family: Arial, sans-serif;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .led {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #f00;
+      display: inline-block;
+      transition: background 0.3s;
+    }
+    .led.connected {
+      background: #0f0;
+    }
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <!-- Indicador de conexión MQTT -->
+  <div id="connection-status">
+    <span class="led" id="led"></span>
+    <span id="status-text">Conectando...</span>
+  </div>
+
+  <!-- Escena VR con solo giroscopio -->
+  <a-scene vr-mode-ui="enabled: true" device-orientation-permission-ui="enabled: false">
+    
+    <!-- Cámara con control por giroscopio (solo mirada) -->
+    <a-entity position="0 1.6 4">
+      <a-camera>
+        <!-- Cursor basado en mirada (sin rayo ni interacción) -->
+        <a-cursor 
+          fuse="false" 
+          color="#FF4444" 
+          animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150">
+        </a-cursor>
+      </a-camera>
+    </a-entity>
+
+    <!-- Luces -->
+    <a-light type="ambient" color="#444"></a-light>
+    <a-light type="directional" color="#FFF" position="0 5 5"></a-light>
+
+    <!-- Suelo -->
+    <a-plane 
+      rotation="-90 0 0" 
+      width="20" 
+      height="20" 
+      color="#AAA" 
+      opacity="0.2" 
+      transparent="true">
+    </a-plane>
+
+    <!-- Título flotante -->
+    <a-text 
+      value="Estación Horus VVB" 
+      color="#FFF" 
+      position="0 2.2 -3" 
+      align="center" 
+      width="10">
+    </a-text>
+
+    <!-- Temperatura -->
+    <a-box id="temp-bar" position="-3 1 -3" depth="0.2" width="0.5" color="#FF4444" visible="false"></a-box>
+    <a-text id="temp-text" value="Temp: --°C" position="-3 0.5 -3" color="#DDD" align="center"></a-text>
+
+    <!-- Humedad -->
+    <a-box id="hum-bar" position="-1 1 -3" depth="0.2" width="0.5" color="#4444FF" visible="false"></a-box>
+    <a-text id="hum-text" value="Humedad: --%" position="-1 0.5 -3" color="#DDD" align="center"></a-text>
+
+    <!-- PM2.5 -->
+    <a-box id="pm25-bar" position="1 1 -3" depth="0.2" width="0.5" color="#FF8800" visible="false"></a-box>
+    <a-text id="pm25-text" value="PM2.5: -- μg/m³" position="1 0.5 -3" color="#DDD" align="center"></a-text>
+
+    <!-- Viento (velocidad) -->
+    <a-box id="wind-bar" position="3 1 -3" depth="0.2" width="0.5" color="#00FF00" visible="false"></a-box>
+    <a-text id="wind-text" value="Viento: -- m/s" position="3 0.5 -3" color="#DDD" align="center"></a-text>
+
+    <!-- Lluvia -->
+    <a-cone id="rain-cone" position="0 1 -6" radius-bottom="0.5" height="1" color="#6688FF" visible="false"></a-cone>
+    <a-text id="rain-text" value="Lluvia: no" position="0 0.5 -6" color="#DDD" align="center"></a-text>
+
+    <!-- Dirección del viento -->
+    <a-entity id="wind-arrow" position="2 1 -6" visible="false">
+      <a-cone color="#FF00FF" radius-bottom="0.2" height="0.8" rotation="-90 0 0"></a-cone>
+      <a-cylinder color="#FF00FF" radius="0.05" height="1.2" rotation="-90 0 0" position="0 0 -0.6"></a-cylinder>
+    </a-entity>
+    <a-text id="winddir-text" value="Dir: --°" position="2 0.5 -6" color="#DDD" align="center"></a-text>
+  </a-scene>
+
+  <script>
+    // Configuración MQTT
+    const broker = "broker.hivemq.com";
+    const port = 8080;
+    const clientId = "vr-horus-" + Math.random().toString(16).substr(2, 8);
+    const client = new Paho.MQTT.Client(broker, port, clientId);
+
+    // UI
+    const led = document.getElementById("led");
+    const statusText = document.getElementById("status-text");
+
+    const tempBar = document.getElementById("temp-bar");
+    const tempText = document.getElementById("temp-text");
+    const humBar = document.getElementById("hum-bar");
+    const humText = document.getElementById("hum-text");
+    const pm25Bar = document.getElementById("pm25-bar");
+    const pm25Text = document.getElementById("pm25-text");
+    const windBar = document.getElementById("wind-bar");
+    const windText = document.getElementById("wind-text");
+    const rainCone = document.getElementById("rain-cone");
+    const rainText = document.getElementById("rain-text");
+    const windArrow = document.getElementById("wind-arrow");
+    const windDirText = document.getElementById("winddir-text");
+
+    // Función para actualizar barras
+    function updateBar(bar, value, max) {
+      const height = Math.max(0.1, value / max);
+      bar.setAttribute("height", height);
+      bar.setAttribute("position", { y: height / 2, z: -3 });
+      bar.setAttribute("visible", true);
+    }
+
+    // Actualizar flecha de viento
+    function updateWindArrow(degrees) {
+      windArrow.setAttribute("rotation", { y: -degrees });
+      windArrow.setAttribute("visible", true);
+    }
+
+    // Indicador de conexión
+    function setConnected(connected) {
+      if (connected) {
+        led.classList.add("connected");
+        statusText.textContent = "Conectado ✅";
+      } else {
+        led.classList.remove("connected");
+        statusText.textContent = "Sin conexión ❌";
+      }
+    }
+
+    // Eventos MQTT
+    client.onConnectionLost = () => setConnected(false);
+
+    client.onMessageArrived = (message) => {
+      const topic = message.destinationName;
+      const payload = message.payloadString.trim();
+
+      switch (topic) {
+        case "horus/vvb/temperatura":
+          const temp = parseFloat(payload);
+          if (!isNaN(temp)) {
+            tempText.setAttribute("value", `Temp: ${temp.toFixed(1)}°C`);
+            updateBar(tempBar, temp, 50);
+          }
+          break;
+
+        case "horus/vvb/humedad":
+          const hum = parseFloat(payload);
+          if (!isNaN(hum)) {
+            humText.setAttribute("value", `Humedad: ${hum.toFixed(1)}%`);
+            updateBar(humBar, hum, 100);
+          }
+          break;
+
+        case "horus/vvb/pm25":
+          const pm25 = parseFloat(payload);
+          if (!isNaN(pm25)) {
+            pm25Text.setAttribute("value", `PM2.5: ${pm25} μg/m³`);
+            updateBar(pm25Bar, pm25, 100);
+          }
+          break;
+
+        case "horus/vvb/wind_speed":
+          const wind = parseFloat(payload);
+          if (!isNaN(wind)) {
+            windText.setAttribute("value", `Viento: ${wind.toFixed(1)} m/s`);
+            updateBar(windBar, wind, 20);
+          }
+          break;
+
+        case "horus/vvb/wind_direction":
+          const dir = parseFloat(payload);
+          if (!isNaN(dir)) {
+            windDirText.setAttribute("value", `Dir: ${dir.toFixed(1)}°`);
+            updateWindArrow(dir);
+          }
+          break;
+
+        case "horus/vvb/lluvia":
+          const raining = ["1", "true", "si", "yes", "rain"].includes(payload.toLowerCase());
+          rainCone.setAttribute("visible", raining);
+          rainText.setAttribute("value", `Lluvia: ${raining ? "sí" : "no"}`);
+          break;
+      }
+    };
+
+    // Conectar al cargar
+    window.addEventListener("load", () => {
+      client.connect({
+        onSuccess: () => {
+          setConnected(true);
+          [
+            "horus/vvb/temperatura",
+            "horus/vvb/humedad",
+            "horus/vvb/pm25",
+            "horus/vvb/wind_speed",
+            "horus/vvb/wind_direction",
+            "horus/vvb/lluvia"
+          ].forEach(topic => client.subscribe(topic));
+        },
+        onFailure: (error) => {
+          setConnected(false);
+          console.error("Error MQTT:", error.errorMessage);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
