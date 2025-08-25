@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HORUS STATION - VR</title>
+  <title>HORUS STATION - DASHBOARD</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <script src="js/aframe.js"></script>
   <script src="js/paho.js"></script>
@@ -46,6 +46,7 @@
       border-radius: 8px;
       font-weight: bold;
       font-size: 18px;
+      text-shadow: 0 0 5px rgba(0, 234, 255, 0.5);
     }
   </style>
 </head>
@@ -79,174 +80,94 @@
               material="color: #003366; transparent: true; opacity: 0.1">
     </a-entity>
 
-    <!-- TÍTULO "HORUS STATION" EN LOS 4 LADOS (más lejos) -->
-    <!-- Norte -->
-    <a-entity position="0 2.8 -5.5">
-      <a-entity look-at="[camera]">
-        <a-text value="📡 HORUS STATION" color="#00eaff" align="center" 
-                width="12" font="exo2bold" shader="flat"
-                animation="property: position; from: 0 2.8 -5.5; to: 0 3.0 -5.5; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
-        </a-text>
+    <!-- PANEL PRINCIPAL (frente al usuario) -->
+    <a-entity position="0 1.8 -3">
+      <!-- Marco del panel -->
+      <a-plane width="8" height="4.5" color="#0a1a30" opacity="0.85" transparent="true" rotation="0 0 0"></a-plane>
+      <a-plane width="7.8" height="4.3" color="#001020" opacity="0.9" transparent="true" rotation="0 0 0" position="0 0 0.01"></a-plane>
+      
+      <!-- FILA 1: Temperatura y Humedad -->
+      <a-entity position="-2.5 1.2 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="temp-text" value="-- °C" color="#FF5722" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
       </a-entity>
-    </a-entity>
-    
-    <!-- Sur -->
-    <a-entity position="0 2.8 5.5">
-      <a-entity look-at="[camera]">
-        <a-text value="📡 HORUS STATION" color="#00eaff" align="center" 
-                width="12" font="exo2bold" shader="flat"
-                animation="property: position; from: 0 2.8 5.5; to: 0 3.0 5.5; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
-        </a-text>
+      
+      <a-entity position="0 1.2 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="hum-text" value="-- %" color="#2196F3" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
       </a-entity>
-    </a-entity>
-    
-    <!-- Este -->
-    <a-entity position="5.5 2.8 0">
-      <a-entity look-at="[camera]">
-        <a-text value="📡 HORUS STATION" color="#00eaff" align="center" 
-                width="12" font="exo2bold" shader="flat"
-                animation="property: position; from: 5.5 2.8 0; to: 5.5 3.0 0; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
-        </a-text>
+      
+      <a-entity position="2.5 1.2 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="press-text" value="-- hPa" color="#9E9E9E" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
       </a-entity>
-    </a-entity>
-    
-    <!-- Oeste -->
-    <a-entity position="-5.5 2.8 0">
-      <a-entity look-at="[camera]">
-        <a-text value="📡 HORUS STATION" color="#00eaff" align="center" 
-                width="12" font="exo2bold" shader="flat"
-                animation="property: position; from: -5.5 2.8 0; to: -5.5 3.0 0; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
-        </a-text>
+      
+      <!-- FILA 2: Altitud, PM2.5 y PM10 -->
+      <a-entity position="-2.5 -0.3 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="alt-text" value="-- m" color="#673AB7" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
       </a-entity>
-    </a-entity>
-
-    <!-- DATOS ALREDEDOR DE TI (a 4.0m, altura 2.0m) -->
-    <!-- Temperatura - frente a ti -->
-    <a-entity position="0 2.0 -4.0">
-      <a-entity look-at="[camera]">
-        <a-text id="temp-text" value="🌡️ --°C" color="#FF5722" align="center" 
-                width="4.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 10"></a-text>
-        <a-text value="TEMPERATURA" color="#FFF" position="0 -0.7 0" align="center" 
-                width="4.5" font="roboto" shader="flat" 
-                text="wrapCount: 10"></a-text>
+      
+      <a-entity position="0 -0.3 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="pm25-text" value="-- μg/m³" color="#FF9800" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
       </a-entity>
-    </a-entity>
-
-    <!-- Humedad - derecha -->
-    <a-entity position="2.8 2.0 -2.8">
-      <a-entity look-at="[camera]">
-        <a-text id="hum-text" value="💧 --%" color="#2196F3" align="center" 
-                width="4.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 10"></a-text>
-        <a-text value="HUMEDAD" color="#FFF" position="0 -0.7 0" align="center" 
-                width="4.5" font="roboto" shader="flat" 
-                text="wrapCount: 10"></a-text>
+      
+      <a-entity position="2.5 -0.3 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="pm10-text" value="-- μg/m³" color="#F44336" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
       </a-entity>
-    </a-entity>
-
-    <!-- Presión - derecha delante -->
-    <a-entity position="4.0 2.0 0">
-      <a-entity look-at="[camera]">
-        <a-text id="press-text" value="🔽 -- hPa" color="#9E9E9E" align="center" 
-                width="5.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 12"></a-text>
-        <a-text value="PRESIÓN" color="#FFF" position="0 -0.7 0" align="center" 
-                width="5.5" font="roboto" shader="flat" 
-                text="wrapCount: 12"></a-text>
+      
+      <!-- FILA 3: Viento, Gas y Lluvia -->
+      <a-entity position="-2.5 -1.8 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="wind-text" value="-- m/s" color="#4CAF50" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
       </a-entity>
-    </a-entity>
-
-    <!-- Altitud - izquierda delante -->
-    <a-entity position="-4.0 2.0 0">
-      <a-entity look-at="[camera]">
-        <a-text id="alt-text" value="⛰️ -- m" color="#673AB7" align="center" 
-                width="4.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 10"></a-text>
-        <a-text value="ALTITUD" color="#FFF" position="0 -0.7 0" align="center" 
-                width="4.5" font="roboto" shader="flat" 
-                text="wrapCount: 10"></a-text>
+      
+      <a-entity position="0 -1.8 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="gas-text" value="-- %" color="#FFEB3B" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+      </a-entity>
+      
+      <a-entity position="2.5 -1.8 0.1">
+        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="rain-text" value="no" color="#2196F3" position="0 0 0" 
+                align="center" width="2.2" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+      </a-entity>
+      
+      <!-- Dirección del viento (grande, en el centro inferior) -->
+      <a-entity position="0 -3.0 0.1">
+        <a-plane width="4.0" height="1.0" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+        <a-text id="winddir-text" value="-- °" color="#E91E63" position="0 0 0" 
+                align="center" width="3.5" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 3.0; letterSpacing: 5"></a-text>
       </a-entity>
     </a-entity>
 
-    <!-- PM2.5 - izquierda -->
-    <a-entity position="-2.8 2.0 -2.8">
-      <a-entity look-at="[camera]">
-        <a-text id="pm25-text" value="🌫️ -- μg/m³" color="#FF9800" align="center" 
-                width="5.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 12"></a-text>
-        <a-text value="PM2.5" color="#FFF" position="0 -0.7 0" align="center" 
-                width="5.5" font="roboto" shader="flat" 
-                text="wrapCount: 12"></a-text>
-      </a-entity>
-    </a-entity>
-
-    <!-- PM10 - atrás derecha -->
-    <a-entity position="2.8 2.0 2.8">
-      <a-entity look-at="[camera]">
-        <a-text id="pm10-text" value="🌫️ -- μg/m³" color="#F44336" align="center" 
-                width="5.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 12"></a-text>
-        <a-text value="PM10" color="#FFF" position="0 -0.7 0" align="center" 
-                width="5.5" font="roboto" shader="flat" 
-                text="wrapCount: 12"></a-text>
-      </a-entity>
-    </a-entity>
-
-    <!-- Viento (velocidad) - atrás -->
-    <a-entity position="0 2.0 4.0">
-      <a-entity look-at="[camera]">
-        <a-text id="wind-text" value="💨 -- m/s" color="#4CAF50" align="center" 
-                width="5.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 12"></a-text>
-        <a-text value="VIENTO" color="#FFF" position="0 -0.7 0" align="center" 
-                width="5.5" font="roboto" shader="flat" 
-                text="wrapCount: 12"></a-text>
-      </a-entity>
-    </a-entity>
-
-    <!-- Gas - atrás izquierda (como porcentaje) -->
-    <a-entity position="-2.8 2.0 2.8">
-      <a-entity look-at="[camera]">
-        <a-text id="gas-text" value="⛽ --%" color="#FFEB3B" align="center" 
-                width="5.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 12"></a-text>
-        <a-text value="GAS" color="#FFF" position="0 -0.7 0" align="center" 
-                width="5.5" font="roboto" shader="flat" 
-                text="wrapCount: 12"></a-text>
-      </a-entity>
-    </a-entity>
-
-    <!-- Lluvia - derecha atrás (como sí/no) -->
-    <a-entity position="3.4 2.0 1.4">
-      <a-entity look-at="[camera]">
-        <a-text id="rain-text" value="🌧️ no" color="#2196F3" align="center" 
-                width="4.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 10"></a-text>
-        <a-text value="LLUVIA" color="#FFF" position="0 -0.7 0" align="center" 
-                width="4.5" font="roboto" shader="flat" 
-                text="wrapCount: 10"></a-text>
-      </a-entity>
-    </a-entity>
-
-    <!-- Dirección del viento - izquierda atrás -->
-    <a-entity position="-3.4 2.0 1.4">
-      <a-entity look-at="[camera]">
-        <a-text id="winddir-text" value="🧭 --°" color="#E91E63" align="center" 
-                width="4.5" font="exo2bold" shader="flat" 
-                text="wrapCount: 10"></a-text>
-        <a-text value="DIR. VIENTO" color="#FFF" position="0 -0.7 0" align="center" 
-                width="5.5" font="roboto" shader="flat" 
-                text="wrapCount: 12"></a-text>
-      </a-entity>
-    </a-entity>
   </a-scene>
 
   <script>
     // Configuración MQTT (WSS seguro)
     const broker = "broker.hivemq.com";
     const port = 8884; // Puerto WSS (seguro)
-    const clientId = "vr-horus-" + Math.random().toString(16).substr(2, 8);
+    const clientId = "vr-horus-dashboard-" + Math.random().toString(16).substr(2, 8);
     const client = new Paho.MQTT.Client(broker, port, "/mqtt", clientId);
 
     // Elementos UI (interfaz fija)
@@ -257,8 +178,6 @@
       // Actualizar interfaz fija
       ledUI.className = connected ? "led connected" : "led";
       statusTextUI.textContent = connected ? "Conectado" : "Desconectado";
-      
-      // No necesitamos el indicador 3D en el centro, por eso lo eliminamos
     }
 
     function decodeUTF8(str) {
@@ -279,43 +198,43 @@
       // Ajustar: Lluvia y Gas como porcentajes
       if (topic === "horus/vvb/lluvia") {
         const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
-        document.getElementById("rain-text").setAttribute("value", `🌧️ ${raining ? "sí" : "no"}`);
+        document.getElementById("rain-text").setAttribute("value", raining ? "sí" : "no");
       }
       else if (topic === "horus/vvb/gas") {
         const gasValue = parseFloat(payload);
         if (!isNaN(gasValue)) {
           const percent = Math.max(0, Math.min(100, (100 - gasValue / 10))).toFixed(1);
-          document.getElementById("gas-text").setAttribute("value", `⛽ ${percent}%`);
+          document.getElementById("gas-text").setAttribute("value", `${percent}%`);
         } else {
-          document.getElementById("gas-text").setAttribute("value", `⛽ 0%`);
+          document.getElementById("gas-text").setAttribute("value", "0%");
         }
       }
       else {
         // Para todos los demás, solo mostrar valor
         switch (topic) {
           case "horus/vvb/temperatura":
-            document.getElementById("temp-text").setAttribute("value", `🌡️ ${payload}°C`);
+            document.getElementById("temp-text").setAttribute("value", `${payload} °C`);
             break;
           case "horus/vvb/humedad":
-            document.getElementById("hum-text").setAttribute("value", `💧 ${payload}%`);
+            document.getElementById("hum-text").setAttribute("value", `${payload} %`);
             break;
           case "horus/vvb/presion":
-            document.getElementById("press-text").setAttribute("value", `🔽 ${payload} hPa`);
+            document.getElementById("press-text").setAttribute("value", `${payload} hPa`);
             break;
           case "horus/vvb/altitud":
-            document.getElementById("alt-text").setAttribute("value", `⛰️ ${payload} m`);
+            document.getElementById("alt-text").setAttribute("value", `${payload} m`);
             break;
           case "horus/vvb/pm25":
-            document.getElementById("pm25-text").setAttribute("value", `🌫️ ${payload} μg/m³`);
+            document.getElementById("pm25-text").setAttribute("value", `${payload} μg/m³`);
             break;
           case "horus/vvb/pm10":
-            document.getElementById("pm10-text").setAttribute("value", `🌫️ ${payload} μg/m³`);
+            document.getElementById("pm10-text").setAttribute("value", `${payload} μg/m³`);
             break;
           case "horus/vvb/wind_speed":
-            document.getElementById("wind-text").setAttribute("value", `💨 ${payload} m/s`);
+            document.getElementById("wind-text").setAttribute("value", `${payload} m/s`);
             break;
           case "horus/vvb/wind_direction":
-            document.getElementById("winddir-text").setAttribute("value", `🧭 ${payload}°`);
+            document.getElementById("winddir-text").setAttribute("value", `${payload} °`);
             break;
         }
       }
