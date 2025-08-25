@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Estación Horus - VR</title>
-  <!-- Asegura la codificación UTF-8 -->
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <!-- Librerías locales -->
   <script src="js/aframe.js"></script>
   <script src="js/paho.js"></script>
   <style>
@@ -14,9 +12,10 @@
   </style>
 </head>
 <body>
+  <!-- Escena VR con TÚ en el centro -->
   <a-scene background="color: #001020" vr-mode-ui="enabled: true" device-orientation-permission-ui="enabled: false">
-
-    <!-- Cámara en el centro -->
+    
+    <!-- ¡TÚ estás aquí! (posición de la cámara) -->
     <a-entity position="0 1.6 0">
       <a-camera>
         <a-cursor color="#00aaff" fuse="false"></a-cursor>
@@ -28,105 +27,135 @@
     <a-light type="directional" color="#FFF" intensity="0.8" position="1 5 3"></a-light>
 
     <!-- Suelo con rejilla -->
-    <a-entity position="0 0 0">
-      <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.2" transparent="true"></a-plane>
-      <a-entity
-        geometry="primitive: plane; width: 50; height: 50"
-        material="color: #003366; transparent: true; opacity: 0.1"
-        position="0 0.01 0"
-        rotation="-90 0 0">
-      </a-entity>
+    <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.2" transparent="true"></a-plane>
+    <a-entity position="0 0.01 0" rotation="-90 0 0" 
+              geometry="primitive: plane; width: 50; height: 50" 
+              material="color: #003366; transparent: true; opacity: 0.1">
     </a-entity>
 
-    <!-- Título con acentos -->
-    <a-text
-      value="📡 ESTACIÓN HORUS"
-      color="#00eaff"
-      position="0 3 -0"
-      align="center"
-      width="16"
-      font="exo2bold"
-      shader="flat"
-      animation="property: position; from: 0 3 0; to: 0 3.3 0; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
+    <!-- Título arriba de ti -->
+    <a-text value="📡 ESTACIÓN HORUS" color="#00eaff" position="0 3 0" align="center" 
+            width="16" font="exo2bold" shader="flat"
+            animation="property: position; from: 0 3 0; to: 0 3.3 0; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
     </a-text>
 
-    <!-- Estado de conexión -->
+    <!-- Indicador de conexión frente a ti -->
     <a-entity position="0 2.2 0">
       <a-sphere id="status-led" radius="0.15" color="#f00" metalness="0.8"></a-sphere>
-      <a-text id="status-text" value="Conectando..." color="#DDD" position="0 -0.3 0" align="center" width="5" shader="flat"></a-text>
+      <a-text id="status-text" value="Conectando..." color="#DDD" position="0 -0.3 0" 
+              align="center" width="5" shader="flat"></a-text>
     </a-entity>
 
-    <!-- Sensores distribuidos en círculo (360°) -->
-    <!-- Temperatura - 0° -->
-    <a-entity position="5 1.5 0">
-      <a-text id="temp-text" value="🌡️ --°C" color="#FF5722" align="center" width="4" font="exo2bold" shader="flat"></a-text>
-      <a-text value="TEMPERATURA" color="#FFF" position="0 -0.6 0" align="center" width="4" font="roboto" shader="flat"></a-text>
-    </a-entity>
-
-    <!-- Humedad - 45° -->
-    <a-entity position="3.5 1.5 -3.5">
-      <a-text id="hum-text" value="💧 --%" color="#2196F3" align="center" width="4" font="exo2bold" shader="flat"></a-text>
-      <a-text value="HUMEDAD" color="#FFF" position="0 -0.6 0" align="center" width="4" font="roboto" shader="flat"></a-text>
-    </a-entity>
-
-    <!-- Presión - 90° -->
+    <!-- DATOS ALREDEDOR DE TI (círculo de 360°) -->
+    <!-- Temperatura - frente a ti -->
     <a-entity position="0 1.5 -5">
-      <a-text id="press-text" value="🔽 -- hPa" color="#9E9E9E" align="center" width="5" font="exo2bold" shader="flat"></a-text>
-      <a-text value="PRESIÓN" color="#FFF" position="0 -0.6 0" align="center" width="5" font="roboto" shader="flat"></a-text>
+      <a-text id="temp-text" value="🌡️ --°C" color="#FF5722" align="center" 
+              width="4" font="exo2bold" shader="flat" 
+              rotation="0 180 0"></a-text>
+      <a-text value="TEMPERATURA" color="#FFF" position="0 -0.6 0" align="center" 
+              width="4" font="roboto" shader="flat" 
+              rotation="0 180 0"></a-text>
     </a-entity>
 
-    <!-- Altitud - 135° -->
-    <a-entity position="-3.5 1.5 -3.5">
-      <a-text id="alt-text" value="⛰️ -- m" color="#673AB7" align="center" width="4" font="exo2bold" shader="flat"></a-text>
-      <a-text value="ALTITUD" color="#FFF" position="0 -0.6 0" align="center" width="4" font="roboto" shader="flat"></a-text>
+    <!-- Humedad - derecha -->
+    <a-entity position="3.5 1.5 -3.5">
+      <a-text id="hum-text" value="💧 --%" color="#2196F3" align="center" 
+              width="4" font="exo2bold" shader="flat" 
+              rotation="0 135 0"></a-text>
+      <a-text value="HUMEDAD" color="#FFF" position="0 -0.6 0" align="center" 
+              width="4" font="roboto" shader="flat" 
+              rotation="0 135 0"></a-text>
     </a-entity>
 
-    <!-- PM2.5 - 180° -->
+    <!-- Presión - derecha delante -->
+    <a-entity position="5 1.5 0">
+      <a-text id="press-text" value="🔽 -- hPa" color="#9E9E9E" align="center" 
+              width="5" font="exo2bold" shader="flat" 
+              rotation="0 90 0"></a-text>
+      <a-text value="PRESIÓN" color="#FFF" position="0 -0.6 0" align="center" 
+              width="5" font="roboto" shader="flat" 
+              rotation="0 90 0"></a-text>
+    </a-entity>
+
+    <!-- Altitud - izquierda delante -->
     <a-entity position="-5 1.5 0">
-      <a-text id="pm25-text" value="🌫️ -- μg/m³" color="#FF9800" align="center" width="5" font="exo2bold" shader="flat"></a-text>
-      <a-text value="PM2.5" color="#FFF" position="0 -0.6 0" align="center" width="5" font="roboto" shader="flat"></a-text>
+      <a-text id="alt-text" value="⛰️ -- m" color="#673AB7" align="center" 
+              width="4" font="exo2bold" shader="flat" 
+              rotation="0 -90 0"></a-text>
+      <a-text value="ALTITUD" color="#FFF" position="0 -0.6 0" align="center" 
+              width="4" font="roboto" shader="flat" 
+              rotation="0 -90 0"></a-text>
     </a-entity>
 
-    <!-- PM10 - 225° -->
-    <a-entity position="-3.5 1.5 3.5">
-      <a-text id="pm10-text" value="🌫️ -- μg/m³" color="#F44336" align="center" width="5" font="exo2bold" shader="flat"></a-text>
-      <a-text value="PM10" color="#FFF" position="0 -0.6 0" align="center" width="5" font="roboto" shader="flat"></a-text>
+    <!-- PM2.5 - izquierda -->
+    <a-entity position="-3.5 1.5 -3.5">
+      <a-text id="pm25-text" value="🌫️ -- μg/m³" color="#FF9800" align="center" 
+              width="5" font="exo2bold" shader="flat" 
+              rotation="0 -135 0"></a-text>
+      <a-text value="PM2.5" color="#FFF" position="0 -0.6 0" align="center" 
+              width="5" font="roboto" shader="flat" 
+              rotation="0 -135 0"></a-text>
     </a-entity>
 
-    <!-- Viento (velocidad) - 270° -->
-    <a-entity position="0 1.5 5">
-      <a-text id="wind-text" value="💨 -- m/s" color="#4CAF50" align="center" width="5" font="exo2bold" shader="flat"></a-text>
-      <a-text value="VIENTO" color="#FFF" position="0 -0.6 0" align="center" width="5" font="roboto" shader="flat"></a-text>
-    </a-entity>
-
-    <!-- Gas - 315° (como porcentaje) -->
+    <!-- PM10 - atrás derecha -->
     <a-entity position="3.5 1.5 3.5">
-      <a-text id="gas-text" value="⛽ --%" color="#FFEB3B" align="center" width="5" font="exo2bold" shader="flat"></a-text>
-      <a-text value="GAS (CO)" color="#FFF" position="0 -0.6 0" align="center" width="5" font="roboto" shader="flat"></a-text>
+      <a-text id="pm10-text" value="🌫️ -- μg/m³" color="#F44336" align="center" 
+              width="5" font="exo2bold" shader="flat" 
+              rotation="0 45 0"></a-text>
+      <a-text value="PM10" color="#FFF" position="0 -0.6 0" align="center" 
+              width="5" font="roboto" shader="flat" 
+              rotation="0 45 0"></a-text>
     </a-entity>
 
-    <!-- Lluvia - 337.5° (como porcentaje o "sí/no") -->
+    <!-- Viento (velocidad) - atrás -->
+    <a-entity position="0 1.5 5">
+      <a-text id="wind-text" value="💨 -- m/s" color="#4CAF50" align="center" 
+              width="5" font="exo2bold" shader="flat" 
+              rotation="0 180 0"></a-text>
+      <a-text value="VIENTO" color="#FFF" position="0 -0.6 0" align="center" 
+              width="5" font="roboto" shader="flat" 
+              rotation="0 180 0"></a-text>
+    </a-entity>
+
+    <!-- Gas - atrás izquierda (como porcentaje) -->
+    <a-entity position="-3.5 1.5 3.5">
+      <a-text id="gas-text" value="⛽ --%" color="#FFEB3B" align="center" 
+              width="5" font="exo2bold" shader="flat" 
+              rotation="0 -45 0"></a-text>
+      <a-text value="GAS" color="#FFF" position="0 -0.6 0" align="center" 
+              width="5" font="roboto" shader="flat" 
+              rotation="0 -45 0"></a-text>
+    </a-entity>
+
+    <!-- Lluvia - derecha atrás (como sí/no) -->
     <a-entity position="4.6 1.5 1.9">
-      <a-text id="rain-text" value="🌧️ no" color="#2196F3" align="center" width="4" font="exo2bold" shader="flat"></a-text>
-      <a-text value="LLUVIA" color="#FFF" position="0 -0.6 0" align="center" width="4" font="roboto" shader="flat"></a-text>
+      <a-text id="rain-text" value="🌧️ no" color="#2196F3" align="center" 
+              width="4" font="exo2bold" shader="flat" 
+              rotation="0 22.5 0"></a-text>
+      <a-text value="LLUVIA" color="#FFF" position="0 -0.6 0" align="center" 
+              width="4" font="roboto" shader="flat" 
+              rotation="0 22.5 0"></a-text>
     </a-entity>
 
-    <!-- Dirección del viento - 22.5° -->
-    <a-entity position="4.6 1.5 -1.9">
-      <a-text id="winddir-text" value="🧭 --°" color="#E91E63" align="center" width="4" font="exo2bold" shader="flat"></a-text>
-      <a-text value="DIR. VIENTO" color="#FFF" position="0 -0.6 0" align="center" width="5" font="roboto" shader="flat"></a-text>
+    <!-- Dirección del viento - izquierda atrás -->
+    <a-entity position="-4.6 1.5 1.9">
+      <a-text id="winddir-text" value="🧭 --°" color="#E91E63" align="center" 
+              width="4" font="exo2bold" shader="flat" 
+              rotation="0 -22.5 0"></a-text>
+      <a-text value="DIR. VIENTO" color="#FFF" position="0 -0.6 0" align="center" 
+              width="5" font="roboto" shader="flat" 
+              rotation="0 -22.5 0"></a-text>
     </a-entity>
-
   </a-scene>
 
   <script>
     // Configuración MQTT (WSS seguro)
     const broker = "broker.hivemq.com";
-    const port = 8884;
+    const port = 8884; // Puerto WSS (seguro)
     const clientId = "vr-horus-" + Math.random().toString(16).substr(2, 8);
     const client = new Paho.MQTT.Client(broker, port, "/mqtt", clientId);
 
-    // UI
+    // Elementos UI
     const led = document.getElementById("status-led");
     const statusText = document.getElementById("status-text");
 
@@ -138,7 +167,6 @@
         "property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 1000; easing: easeInOutSine; loop: true");
     }
 
-    // Función para decodificar texto UTF-8 correctamente
     function decodeUTF8(str) {
       try {
         return decodeURIComponent(escape(str));
@@ -160,10 +188,8 @@
         document.getElementById("rain-text").setAttribute("value", `🌧️ ${raining ? "sí" : "no"}`);
       }
       else if (topic === "horus/vvb/gas") {
-        // Suponemos que el valor es un número (ej: 45.2 kΩ) → convertimos a porcentaje estimado
         const gasValue = parseFloat(payload);
         if (!isNaN(gasValue)) {
-          // Escala estimada: 0 a 100% (ajusta según tu sensor)
           const percent = Math.max(0, Math.min(100, (100 - gasValue / 10))).toFixed(1);
           document.getElementById("gas-text").setAttribute("value", `⛽ ${percent}%`);
         } else {
@@ -209,7 +235,7 @@
         useSSL: true,
         onSuccess: () => {
           setConnected(true);
-          [
+          const topics = [
             "horus/vvb/temperatura",
             "horus/vvb/humedad",
             "horus/vvb/presion",
@@ -220,7 +246,14 @@
             "horus/vvb/wind_direction",
             "horus/vvb/gas",
             "horus/vvb/lluvia"
-          ].forEach(topic => client.subscribe(topic));
+          ];
+          
+          topics.forEach(topic => {
+            client.subscribe(topic, {
+              onSuccess: () => console.log(`Suscrito a ${topic}`),
+              onFailure: (error) => console.error(`Error suscribiendo a ${topic}:`, error)
+            });
+          });
         },
         onFailure: (error) => {
           setConnected(false);
