@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HORUS STATION - DASHBOARD</title>
+  <title>HORUS STATION - AR</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <script src="js/aframe.js"></script>
+  <!-- Librerías para AR -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <script src="js/paho.js"></script>
   <style>
     body { 
@@ -48,126 +51,144 @@
       font-size: 18px;
       text-shadow: 0 0 5px rgba(0, 234, 255, 0.5);
     }
+    #ar-instructions {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
-  <!-- Indicador de conexión FIJO (no se mueve con la cabeza) -->
+  <!-- Indicador de conexión FIJO -->
   <div id="connection-indicator">
     <span class="led" id="status-led-ui"></span>
     <span id="status-text-ui">Desconectado</span>
   </div>
   
   <!-- Título superior FIJO -->
-  <div id="top-title">HORUS STATION</div>
+  <div id="top-title">HORUS STATION - AR</div>
+  
+  <!-- Instrucciones para AR -->
+  <div id="ar-instructions">
+    Apunta la cámara a una superficie plana para colocar el panel
+  </div>
 
-  <a-scene background="color: #001020" vr-mode-ui="enabled: true" device-orientation-permission-ui="enabled: false">
+  <a-scene 
+    embedded
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+    device-orientation-permission-ui="enabled: false"
+    vr-mode-ui="enabled: false">
     
-    <!-- ¡TÚ estás aquí! (posición de la cámara) -->
-    <a-entity position="0 1.6 0">
-      <a-camera>
-        <a-cursor color="#00aaff" fuse="false"></a-cursor>
-      </a-camera>
-    </a-entity>
-
-    <!-- Luces -->
-    <a-light type="ambient" color="#555" intensity="0.6"></a-light>
-    <a-light type="directional" color="#FFF" intensity="0.8" position="1 5 3"></a-light>
-
-    <!-- Suelo con rejilla -->
-    <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.2" transparent="true"></a-plane>
-    <a-entity position="0 0.01 0" rotation="-90 0 0" 
-              geometry="primitive: plane; width: 50; height: 50" 
-              material="color: #003366; transparent: true; opacity: 0.1">
-    </a-entity>
-
-    <!-- PANEL PRINCIPAL (frente al usuario) -->
-    <a-entity position="0 1.8 -3">
+    <!-- Panel AR (se colocará sobre una superficie) -->
+    <a-entity 
+      position="0 0 0"
+      rotation="0 0 0"
+      look-at="[camera]"
+      id="dashboard-panel">
+      
       <!-- Marco del panel -->
-      <a-plane width="8" height="4.5" color="#0a1a30" opacity="0.85" transparent="true" rotation="0 0 0"></a-plane>
-      <a-plane width="7.8" height="4.3" color="#001020" opacity="0.9" transparent="true" rotation="0 0 0" position="0 0 0.01"></a-plane>
+      <a-plane width="1.2" height="0.7" color="#0a1a30" opacity="0.85" transparent="true" rotation="0 0 0" position="0 0.35 0"></a-plane>
+      <a-plane width="1.18" height="0.68" color="#001020" opacity="0.9" transparent="true" rotation="0 0 0" position="0 0.35 0.01"></a-plane>
       
       <!-- FILA 1: Temperatura y Humedad -->
-      <a-entity position="-2.5 1.2 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+      <a-entity position="-0.4 0.5 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
         <a-text id="temp-text" value="-- °C" color="#FF5722" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
-      <a-entity position="0 1.2 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+      <a-entity position="0 0.5 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
         <a-text id="hum-text" value="-- %" color="#2196F3" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
-      <a-entity position="2.5 1.2 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+      <a-entity position="0.4 0.5 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
         <a-text id="press-text" value="-- hPa" color="#9E9E9E" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
       <!-- FILA 2: Altitud, PM2.5 y PM10 -->
-      <a-entity position="-2.5 -0.3 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+      <a-entity position="-0.4 0.2 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
         <a-text id="alt-text" value="-- m" color="#673AB7" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
-      <a-entity position="0 -0.3 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
-        <a-text id="pm25-text" value="-- μg/m³" color="#FF9800" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+      <a-entity position="0 0.2 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
+        <a-text id="pm25-text" value="--" color="#FF9800" position="0 0 0" 
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
-      <a-entity position="2.5 -0.3 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
-        <a-text id="pm10-text" value="-- μg/m³" color="#F44336" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+      <a-entity position="0.4 0.2 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
+        <a-text id="pm10-text" value="--" color="#F44336" position="0 0 0" 
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
       <!-- FILA 3: Viento, Gas y Lluvia -->
-      <a-entity position="-2.5 -1.8 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
-        <a-text id="wind-text" value="-- m/s" color="#4CAF50" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+      <a-entity position="-0.4 -0.1 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
+        <a-text id="wind-text" value="--" color="#4CAF50" position="0 0 0" 
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
-      <a-entity position="0 -1.8 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
-        <a-text id="gas-text" value="-- %" color="#FFEB3B" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+      <a-entity position="0 -0.1 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
+        <a-text id="gas-text" value="--" color="#FFEB3B" position="0 0 0" 
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
-      <a-entity position="2.5 -1.8 0.1">
-        <a-plane width="2.4" height="1.5" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
+      <a-entity position="0.4 -0.1 0.01">
+        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
         <a-text id="rain-text" value="no" color="#2196F3" position="0 0 0" 
-                align="center" width="2.2" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5"></a-text>
+                align="center" width="0.35" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
       <!-- Dirección del viento (grande, en el centro inferior) -->
-      <a-entity position="0 -3.0 0.1">
-        <a-plane width="4.0" height="1.0" color="#152540" opacity="0.7" transparent="true" radius="0.2"></a-plane>
-        <a-text id="winddir-text" value="-- °" color="#E91E63" position="0 0 0" 
-                align="center" width="3.5" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 3.0; letterSpacing: 5"></a-text>
+      <a-entity position="0 -0.35 0.01">
+        <a-plane width="0.65" height="0.18" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
+        <a-text id="winddir-text" value="--" color="#E91E63" position="0 0 0" 
+                align="center" width="0.6" font="exo2bold" shader="flat" 
+                text="shader: sdf; baseline: center; width: 0.6; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
     </a-entity>
 
+    <!-- Ancla para AR (se coloca en superficies horizontales) -->
+    <a-entity 
+      id="ar-marker"
+      geometry="primitive: plane; width: 0.5; height: 0.5" 
+      material="color: #00ff00; opacity: 0.3; transparent: true"
+      rotation="-90 0 0"
+      position="0 -0.01 0">
+    </a-entity>
+
+    <!-- Cámara AR -->
+    <a-entity camera></a-entity>
   </a-scene>
 
   <script>
     // Configuración MQTT (WSS seguro)
     const broker = "broker.hivemq.com";
     const port = 8884; // Puerto WSS (seguro)
-    const clientId = "vr-horus-dashboard-" + Math.random().toString(16).substr(2, 8);
+    const clientId = "ar-horus-" + Math.random().toString(16).substr(2, 8);
     const client = new Paho.MQTT.Client(broker, port, "/mqtt", clientId);
 
     // Elementos UI (interfaz fija)
@@ -213,28 +234,28 @@
         // Para todos los demás, solo mostrar valor
         switch (topic) {
           case "horus/vvb/temperatura":
-            document.getElementById("temp-text").setAttribute("value", `${payload} °C`);
+            document.getElementById("temp-text").setAttribute("value", `${payload}°C`);
             break;
           case "horus/vvb/humedad":
-            document.getElementById("hum-text").setAttribute("value", `${payload} %`);
+            document.getElementById("hum-text").setAttribute("value", `${payload}%`);
             break;
           case "horus/vvb/presion":
-            document.getElementById("press-text").setAttribute("value", `${payload} hPa`);
+            document.getElementById("press-text").setAttribute("value", `${payload}hPa`);
             break;
           case "horus/vvb/altitud":
-            document.getElementById("alt-text").setAttribute("value", `${payload} m`);
+            document.getElementById("alt-text").setAttribute("value", `${payload}m`);
             break;
           case "horus/vvb/pm25":
-            document.getElementById("pm25-text").setAttribute("value", `${payload} μg/m³`);
+            document.getElementById("pm25-text").setAttribute("value", payload);
             break;
           case "horus/vvb/pm10":
-            document.getElementById("pm10-text").setAttribute("value", `${payload} μg/m³`);
+            document.getElementById("pm10-text").setAttribute("value", payload);
             break;
           case "horus/vvb/wind_speed":
-            document.getElementById("wind-text").setAttribute("value", `${payload} m/s`);
+            document.getElementById("wind-text").setAttribute("value", `${payload}m/s`);
             break;
           case "horus/vvb/wind_direction":
-            document.getElementById("winddir-text").setAttribute("value", `${payload} °`);
+            document.getElementById("winddir-text").setAttribute("value", `${payload}°`);
             break;
         }
       }
@@ -244,35 +265,38 @@
 
     // Conectar al cargar
     window.addEventListener("load", () => {
-      client.connect({
-        useSSL: true,
-        onSuccess: () => {
-          setConnected(true);
-          const topics = [
-            "horus/vvb/temperatura",
-            "horus/vvb/humedad",
-            "horus/vvb/presion",
-            "horus/vvb/altitud",
-            "horus/vvb/pm25",
-            "horus/vvb/pm10",
-            "horus/vvb/wind_speed",
-            "horus/vvb/wind_direction",
-            "horus/vvb/gas",
-            "horus/vvb/lluvia"
-          ];
-          
-          topics.forEach(topic => {
-            client.subscribe(topic, {
-              onSuccess: () => console.log(`Suscrito a ${topic}`),
-              onFailure: (error) => console.error(`Error suscribiendo a ${topic}:`, error)
+      // Esperar a que AR.js esté listo
+      setTimeout(() => {
+        client.connect({
+          useSSL: true,
+          onSuccess: () => {
+            setConnected(true);
+            const topics = [
+              "horus/vvb/temperatura",
+              "horus/vvb/humedad",
+              "horus/vvb/presion",
+              "horus/vvb/altitud",
+              "horus/vvb/pm25",
+              "horus/vvb/pm10",
+              "horus/vvb/wind_speed",
+              "horus/vvb/wind_direction",
+              "horus/vvb/gas",
+              "horus/vvb/lluvia"
+            ];
+            
+            topics.forEach(topic => {
+              client.subscribe(topic, {
+                onSuccess: () => console.log(`Suscrito a ${topic}`),
+                onFailure: (error) => console.error(`Error suscribiendo a ${topic}:`, error)
+              });
             });
-          });
-        },
-        onFailure: (error) => {
-          setConnected(false);
-          console.error("Error MQTT:", error.errorMessage || error);
-        }
-      });
+          },
+          onFailure: (error) => {
+            setConnected(false);
+            console.error("Error MQTT:", error.errorMessage || error);
+          }
+        });
+      }, 2000); // Esperar un poco para que AR.js se inicialice
     });
   </script>
 </body>
