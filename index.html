@@ -8,10 +8,57 @@
   <script src="js/aframe.js"></script>
   <script src="js/paho.js"></script>
   <style>
-    body { margin: 0; overflow: hidden; }
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      font-family: Arial, sans-serif;
+    }
+    #connection-indicator {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+    #connection-indicator .led {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #f00;
+    }
+    #connection-indicator .led.connected {
+      background: #0f0;
+    }
+    #top-title {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.6);
+      color: #00eaff;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
+  <!-- Indicador de conexión FIJO (no se mueve con la cabeza) -->
+  <div id="connection-indicator">
+    <span class="led" id="status-led-ui"></span>
+    <span id="status-text-ui">Desconectado</span>
+  </div>
+  
+  <!-- Título superior FIJO -->
+  <div id="top-title">HORUS STATION</div>
+
   <a-scene background="color: #001020" vr-mode-ui="enabled: true" device-orientation-permission-ui="enabled: false">
     
     <!-- ¡TÚ estás aquí! (posición de la cámara) -->
@@ -71,13 +118,6 @@
                 animation="property: position; from: -5.5 2.8 0; to: -5.5 3.0 0; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
         </a-text>
       </a-entity>
-    </a-entity>
-
-    <!-- Indicador de conexión frente a ti -->
-    <a-entity position="0 2.4 0">
-      <a-sphere id="status-led" radius="0.15" color="#f00" metalness="0.8"></a-sphere>
-      <a-text id="status-text" value="Conectando..." color="#DDD" position="0 -0.3 0" 
-              align="center" width="5" shader="flat"></a-text>
     </a-entity>
 
     <!-- DATOS ALREDEDOR DE TI (a 4.0m, altura 2.0m) -->
@@ -209,16 +249,16 @@
     const clientId = "vr-horus-" + Math.random().toString(16).substr(2, 8);
     const client = new Paho.MQTT.Client(broker, port, "/mqtt", clientId);
 
-    // Elementos UI
-    const led = document.getElementById("status-led");
-    const statusText = document.getElementById("status-text");
+    // Elementos UI (interfaz fija)
+    const ledUI = document.getElementById("status-led-ui");
+    const statusTextUI = document.getElementById("status-text-ui");
 
     function setConnected(connected) {
-      led.setAttribute("color", connected ? "#0f0" : "#f00");
-      statusText.setAttribute("value", connected ? "Conectado ✅" : "Sin conexión ❌");
-      led.setAttribute("animation", connected ?
-        "property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dur: 800; easing: easeInOutSine; loop: true" :
-        "property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 1000; easing: easeInOutSine; loop: true");
+      // Actualizar interfaz fija
+      ledUI.className = connected ? "led connected" : "led";
+      statusTextUI.textContent = connected ? "Conectado" : "Desconectado";
+      
+      // No necesitamos el indicador 3D en el centro, por eso lo eliminamos
     }
 
     function decodeUTF8(str) {
