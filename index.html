@@ -2,20 +2,106 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HORUS STATION - AR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>HORUS STATION - DASHBOARD</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <!-- Librerías para AR -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="js/aframe.js"></script>
+  <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
   <script src="js/paho.js"></script>
   <style>
+    :root {
+      --primary-color: #00eaff;
+      --primary-dark: #00aaff;
+      --bg-dark: #001020;
+      --panel-bg: #0a1a30;
+      --card-bg: #152540;
+      --text-color: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --border-radius: 8px;
+      --transition: all 0.3s ease;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      --glow: 0 0 15px rgba(0, 234, 255, 0.5);
+    }
+    
     body { 
       margin: 0; 
       overflow: hidden; 
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-color);
+      height: 100vh;
     }
+    
+    /* Estilos para escritorio */
+    #desktop-mode-selector {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px 15px;
+      border-radius: var(--border-radius);
+      backdrop-filter: blur(5px);
+    }
+    
+    /* Estilos para móvil */
+    #mobile-mode-selector {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(0, 234, 255, 0.2);
+    }
+    
+    .mode-btn {
+      padding: 8px 15px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-color);
+      border: 1px solid rgba(0, 234, 255, 0.3);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 80px;
+    }
+    
+    .mode-btn.active {
+      background: var(--primary-color);
+      color: #001a33;
+      font-weight: bold;
+      border-color: var(--primary-dark);
+      box-shadow: var(--glow);
+      transform: translateY(-3px);
+    }
+    
+    .mode-btn:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--primary-dark);
+    }
+    
+    .mode-btn i {
+      font-size: 18px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
     #connection-indicator {
       position: absolute;
       top: 15px;
@@ -26,34 +112,34 @@
       gap: 8px;
       background: rgba(0, 0, 0, 0.6);
       padding: 8px 12px;
-      border-radius: 8px;
+      border-radius: var(--border-radius);
+      backdrop-filter: blur(5px);
+      box-shadow: var(--shadow);
     }
+    
     #connection-indicator .led {
       width: 12px;
       height: 12px;
       border-radius: 50%;
       background: #f00;
+      box-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
+      transition: var(--transition);
     }
+    
     #connection-indicator .led.connected {
       background: #0f0;
+      box-shadow: 0 0 8px rgba(0, 255, 0, 0.7);
     }
-    #top-title {
-      position: absolute;
-      top: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      background: rgba(0, 0, 0, 0.6);
-      color: #00eaff;
-      padding: 8px 15px;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 18px;
-      text-shadow: 0 0 5px rgba(0, 234, 255, 0.5);
+    
+    #connection-indicator span {
+      color: white;
+      font-size: 14px;
+      transition: var(--transition);
     }
+    
     #ar-instructions {
       position: absolute;
-      bottom: 20px;
+      bottom: 80px;
       left: 0;
       right: 0;
       text-align: center;
@@ -61,213 +147,1116 @@
       background: rgba(0, 0, 0, 0.5);
       padding: 10px;
       z-index: 1000;
+      border-radius: 20px;
+      max-width: 80%;
+      left: 50%;
+      transform: translateX(-50%);
+      backdrop-filter: blur(5px);
+      transition: var(--transition);
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    #ar-instructions.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    #ar-mode-warning {
+      position: absolute;
+      top: 120px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: yellow;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 5px;
+      z-index: 1000;
+      display: none;
+      border-radius: 20px;
+      max-width: 80%;
+      left: 50%;
+      transform: translateX(-50%);
+      backdrop-filter: blur(5px);
+    }
+    
+    #loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    #loader-content {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 25px 30px;
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid rgba(0, 234, 255, 0.3);
+      box-shadow: var(--glow);
+      backdrop-filter: blur(10px);
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(0, 234, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+      position: relative;
+    }
+    
+    /* Efecto de particulas en el loader */
+    .spinner::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      background: var(--primary-color);
+      border-radius: 50%;
+      box-shadow: 0 0 15px var(--primary-color);
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loader-text {
+      color: var(--primary-color);
+      font-size: 20px;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(0, 234, 255, 0.5);
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+    
+    .error-text {
+      color: #ff6b6b;
+    }
+    
+    #remove-panel-btn {
+      position: absolute;
+      bottom: 80px;
+      right: 15px;
+      z-index: 1000;
+      padding: 10px 20px;
+      background: linear-gradient(145deg, #ff3838, #d60000);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: bold;
+      display: none;
+      box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+      transition: var(--transition);
+      backdrop-filter: blur(5px);
+    }
+    
+    #remove-panel-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 0, 0, 0.5);
+    }
+    
+    #ar-click-instruction {
+      position: absolute;
+      top: 90px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px 15px;
+      z-index: 1000;
+      border-radius: 20px;
+      max-width: 80%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      backdrop-filter: blur(5px);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 234, 255, 0.4); }
+      70% { box-shadow: 0 0 0 12px rgba(0, 234, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 234, 255, 0); }
+    }
+    
+    /* Efectos de brillo en los paneles */
+    .panel-glow {
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes glow {
+      from { filter: drop-shadow(0 0 5px rgba(0, 234, 255, 0.3)); }
+      to { filter: drop-shadow(0 0 15px rgba(0, 234, 255, 0.6)); }
+    }
+    
+    /* Estilo para modo móvil */
+    .mobile-only {
+      display: none;
+    }
+    
+    /* Estilo para escritorio */
+    .desktop-only {
+      display: block;
+    }
+    
+    /* Animaciones de entrada */
+    .fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+      opacity: 0;
+    }
+    
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    
+    /* Efecto de onda al hacer clic */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.7);
+      transform: scale(0);
+      animation: ripple 0.6s linear;
+      pointer-events: none;
+    }
+    
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    
+    /* Estilo para el título principal */
+    .main-title {
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      text-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+      position: relative;
+      display: inline-block;
+    }
+    
+    .main-title::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    }
+    
+    /* Botones con efecto 3D */
+    .btn-3d {
+      transform-style: preserve-3d;
+      transition: var(--transition);
+    }
+    
+    .btn-3d:active {
+      transform: translateY(3px);
+    }
+    
+    /* Efecto de brillo en los sensores */
+    .sensor-glow {
+      filter: drop-shadow(0 0 5px rgba(0, 234, 255, 0.3));
+      transition: var(--transition);
+    }
+    
+    .sensor-glow:hover {
+      filter: drop-shadow(0 0 10px rgba(0, 234, 255, 0.6));
+    }
+    
+    /* Estilo para dispositivos móviles */
+    @media (max-width: 768px) {
+      .desktop-only {
+        display: none;
+      }
+      
+      .mobile-only {
+        display: block;
+      }
+      
+      #desktop-mode-selector {
+        display: none;
+      }
+      
+      #mobile-mode-selector {
+        display: flex;
+      }
+      
+      /* Ajustar el loader para móviles */
+      #loader-content {
+        padding: 20px;
+        width: 80%;
+      }
+      
+      .loader-text {
+        font-size: 18px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Indicador de conexión FIJO -->
-  <div id="connection-indicator">
-    <span class="led" id="status-led-ui"></span>
-    <span id="status-text-ui">Desconectado</span>
+  <!-- Selector de modo para escritorio -->
+  <div id="desktop-mode-selector" class="desktop-only">
+    <div id="connection-indicator">
+      <span class="led" id="status-led-ui"></span>
+      <span id="status-text-ui">Desconectado</span>
+    </div>
   </div>
   
-  <!-- Título superior FIJO -->
-  <div id="top-title">HORUS STATION - AR</div>
+  <!-- Selector de modo para móvil -->
+  <div id="mobile-mode-selector" class="mobile-only">
+    <button class="mode-btn active btn-3d" id="3d-mode-btn-mobile">
+      <i>📊</i>
+      <span>3D</span>
+    </button>
+    <button class="mode-btn btn-3d" id="vr-mode-btn-mobile">
+      <i>🕶️</i>
+      <span>VR</span>
+    </button>
+    <button class="mode-btn btn-3d" id="ar-mode-btn-mobile">
+      <i>📱</i>
+      <span>AR</span>
+    </button>
+  </div>
   
   <!-- Instrucciones para AR -->
   <div id="ar-instructions">
-    Apunta la cámara a una superficie plana para colocar el panel
+    Mueve el teléfono para detectar superficies
+  </div>
+  
+  <div id="ar-click-instruction">
+    Toca donde quieras colocar el panel
+  </div>
+  
+  <!-- Advertencia para AR en escritorio -->
+  <div id="ar-mode-warning">
+    El modo AR solo funciona en dispositivos móviles con cámara
+  </div>
+  
+  <!-- Botón para eliminar panel en AR -->
+  <button id="remove-panel-btn">Eliminar Panel</button>
+  
+  <!-- Loader de conexión -->
+  <div id="loader" style="display: block;">
+    <div id="loader-content">
+      <div class="spinner"></div>
+      <div class="loader-text">Conectando a Estación Horus...</div>
+    </div>
   </div>
 
-  <a-scene 
-    embedded
-    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
-    device-orientation-permission-ui="enabled: false"
-    vr-mode-ui="enabled: false">
+  <!-- Escena 3D normal (modo por defecto) -->
+  <a-scene id="normal-scene" 
+           background="color: #001020"
+           vr-mode-ui="enabled: false"
+           device-orientation-permission-ui="enabled: false"
+           style="display: block;">
     
-    <!-- Panel AR (se colocará sobre una superficie) -->
-    <a-entity 
-      position="0 0 0"
-      rotation="0 0 0"
-      look-at="[camera]"
-      id="dashboard-panel">
+    <!-- Cámara para modo 3D normal -->
+    <a-entity position="0 1.6 4">
+      <a-camera>
+        <a-cursor color="#00aaff" fuse="false" 
+                  animation__click="property: scale; from: 1 1 1; to: 0.5 0.5 0.5; dur: 100; startEvents: click"></a-cursor>
+      </a-camera>
+    </a-entity>
+
+    <!-- Luces -->
+    <a-light type="ambient" color="#555" intensity="0.6"></a-light>
+    <a-light id="main-directional-light" type="directional" color="#FFF" intensity="0.8" position="1 5 3"></a-light>
+    
+    <!-- Efecto de luz ambiental dinámica -->
+    <a-animation attribute="intensity" from="0.6" to="0.8" dur="5000" 
+                 direction="alternate" repeat="indefinite" 
+                 easing="easeInOutQuad"></a-animation>
+
+    <!-- Suelo con rejilla -->
+    <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.2" transparent="true"></a-plane>
+    <a-entity position="0 0.01 0" rotation="-90 0 0" 
+              geometry="primitive: plane; width: 50; height: 50" 
+              material="color: #003366; transparent: true; opacity: 0.1">
+    </a-entity>
+    
+    <!-- Efecto de brillo en el suelo -->
+    <a-entity position="0 0 0" rotation="-90 0 0">
+      <a-ring radius-inner="0" radius-outer="25" 
+              material="color: #00eaff; opacity: 0.05; transparent: true; shader: flat">
+        <a-animation attribute="material.opacity" from="0.05" to="0.15" dur="3000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-ring>
+    </a-entity>
+
+    <!-- PANEL PRINCIPAL (frente al usuario) -->
+    <a-entity id="dashboard-panel" position="0 1.8 -3" visible="false" class="panel-glow">
+      <!-- Marco del panel con efecto de brillo -->
+      <a-plane width="8" height="4.5" color="#0a1a30" opacity="0.9" transparent="true" rotation="0 0 0" 
+               material="shader: flat; metalness: 0.2; roughness: 0.8;">
+        <a-animation attribute="material.opacity" from="0.9" to="0.95" dur="3000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-plane>
+      <a-plane width="7.8" height="4.3" color="#001020" opacity="0.95" transparent="true" rotation="0 0 0" 
+               position="0 0 0.01" material="shader: flat; metalness: 0.3; roughness: 0.7;"></a-plane>
       
-      <!-- Marco del panel -->
-      <a-plane width="1.2" height="0.7" color="#0a1a30" opacity="0.85" transparent="true" rotation="0 0 0" position="0 0.35 0"></a-plane>
-      <a-plane width="1.18" height="0.68" color="#001020" opacity="0.9" transparent="true" rotation="0 0 0" position="0 0.35 0.01"></a-plane>
+      <!-- Título del panel con animación -->
+      <a-text value="ESTACIÓN HORUS" color="#00eaff" position="0 2.0 0.1" 
+              align="center" width="7.5" font="exo2bold" shader="flat"
+              animation="property: position; from: 0 2.0 0.1; to: 0 2.05 0.1; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate"></a-text>
+      
+      <!-- Línea divisoria con pulso -->
+      <a-plane width="7.5" height="0.02" color="#00eaff" position="0 1.7 0.1" opacity="0.7">
+        <a-animation attribute="opacity" from="0.7" to="1" dur="2000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-plane>
       
       <!-- FILA 1: Temperatura y Humedad -->
-      <a-entity position="-0.4 0.5 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="temp-text" value="-- °C" color="#FF5722" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="-2.5 1.2 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌡️ TEMPERATURA" color="#FF5722" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="temp-text" value="-- °C" color="#FF5722" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="temp-desc" value="Temperatura ambiente" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
-      <a-entity position="0 0.5 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="hum-text" value="-- %" color="#2196F3" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="0 1.2 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="💧 HUMEDAD" color="#2196F3" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="hum-text" value="-- %" color="#2196F3" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="hum-desc" value="Humedad relativa" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
-      <a-entity position="0.4 0.5 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="press-text" value="-- hPa" color="#9E9E9E" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="2.5 1.2 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🔽 PRESIÓN" color="#9E9E9E" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="press-text" value="-- hPa" color="#9E9E9E" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="press-desc" value="Presión atmosférica" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
       <!-- FILA 2: Altitud, PM2.5 y PM10 -->
-      <a-entity position="-0.4 0.2 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="alt-text" value="-- m" color="#673AB7" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="-2.5 -0.3 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="⛰️ ALTITUD" color="#673AB7" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="alt-text" value="-- m" color="#673AB7" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="alt-desc" value="Sobre nivel del mar" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
-      <a-entity position="0 0.2 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="pm25-text" value="--" color="#FF9800" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="0 -0.3 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌫️ PM2.5" color="#FF9800" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="pm25-text" value="-- μg/m³" color="#FF9800" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="pm25-desc" value="Partículas finas" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
-      <a-entity position="0.4 0.2 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="pm10-text" value="--" color="#F44336" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="2.5 -0.3 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌫️ PM10" color="#F44336" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="pm10-text" value="-- μg/m³" color="#F44336" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="pm10-desc" value="Partículas gruesas" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
       <!-- FILA 3: Viento, Gas y Lluvia -->
-      <a-entity position="-0.4 -0.1 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="wind-text" value="--" color="#4CAF50" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="-2.5 -1.8 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="💨 VIENTO" color="#4CAF50" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="wind-text" value="-- m/s" color="#4CAF50" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="wind-desc" value="Velocidad del viento" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
-      <a-entity position="0 -0.1 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="gas-text" value="--" color="#FFEB3B" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="0 -1.8 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="⛽ GAS" color="#FFEB3B" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="gas-text" value="-- %" color="#FFEB3B" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="gas-desc" value="Nivel de monóxido" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
-      <a-entity position="0.4 -0.1 0.01">
-        <a-plane width="0.4" height="0.25" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="rain-text" value="no" color="#2196F3" position="0 0 0" 
-                align="center" width="0.35" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <a-entity position="2.5 -1.8 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌧️ LLUVIA" color="#2196F3" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="rain-text" value="no" color="#2196F3" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="rain-desc" value="Precipitación actual" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
       </a-entity>
       
-      <!-- Dirección del viento (grande, en el centro inferior) -->
-      <a-entity position="0 -0.35 0.01">
-        <a-plane width="0.65" height="0.18" color="#152540" opacity="0.7" transparent="true" radius="0.03"></a-plane>
-        <a-text id="winddir-text" value="--" color="#E91E63" position="0 0 0" 
-                align="center" width="0.6" font="exo2bold" shader="flat" 
-                text="shader: sdf; baseline: center; width: 0.6; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+      <!-- Dirección del viento -->
+      <a-entity position="0 -3.0 0.1" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="4.0" height="1.0" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🧭 DIRECCIÓN DEL VIENTO" color="#E91E63" position="-0.5 0.2 0" 
+                  align="left" width="3.5" font="roboto" shader="flat"></a-text>
+          <a-text id="winddir-text" value="-- °" color="#E91E63" position="0.5 -0.2 0" 
+                  align="right" width="3.5" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 3.0; letterSpacing: 5; whiteSpace: nowrap; align: right"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- Efecto de partículas decorativas -->
+      <a-entity position="3.5 2.0 0.2">
+        <a-sphere radius="0.03" color="#00eaff" opacity="0.7"></a-sphere>
+        <a-animation attribute="position" from="3.5 2.0 0.2" to="3.5 2.5 0.2" dur="3000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-entity>
+      
+      <a-entity position="-3.5 2.0 0.2">
+        <a-sphere radius="0.03" color="#00eaff" opacity="0.7"></a-sphere>
+        <a-animation attribute="position" from="-3.5 2.0 0.2" to="-3.5 2.5 0.2" dur="4000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
       </a-entity>
     </a-entity>
+  </a-scene>
 
-    <!-- Ancla para AR (se coloca en superficies horizontales) -->
-    <a-entity 
-      id="ar-marker"
-      geometry="primitive: plane; width: 0.5; height: 0.5" 
-      material="color: #00ff00; opacity: 0.3; transparent: true"
-      rotation="-90 0 0"
-      position="0 -0.01 0">
+  <!-- Escena VR -->
+  <a-scene id="vr-scene" 
+           background="color: #001020"
+           vr-mode-ui="enabled: true"
+           device-orientation-permission-ui="enabled: false"
+           style="display: none;">
+    
+    <!-- Cámara para VR -->
+    <a-entity position="0 1.6 0">
+      <a-camera id="vr-camera">
+        <a-cursor color="#00aaff" fuse="false" 
+                  animation__click="property: scale; from: 1 1 1; to: 0.5 0.5 0.5; dur: 100; startEvents: click"></a-cursor>
+      </a-camera>
+    </a-entity>
+
+    <!-- Luces -->
+    <a-light type="ambient" color="#555" intensity="0.6"></a-light>
+    <a-light type="directional" color="#FFF" intensity="0.8" position="1 5 3"></a-light>
+
+    <!-- Suelo con rejilla -->
+    <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.2" transparent="true"></a-plane>
+    <a-entity position="0 0.01 0" rotation="-90 0 0" 
+              geometry="primitive: plane; width: 50; height: 50" 
+              material="color: #003366; transparent: true; opacity: 0.1">
+    </a-entity>
+    
+    <!-- Efecto de brillo en el suelo -->
+    <a-entity position="0 0 0" rotation="-90 0 0">
+      <a-ring radius-inner="0" radius-outer="25" 
+              material="color: #00eaff; opacity: 0.05; transparent: true; shader: flat">
+        <a-animation attribute="material.opacity" from="0.05" to="0.15" dur="3000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-ring>
+    </a-entity>
+
+    <!-- PANEL PRINCIPAL (frente al usuario) -->
+    <a-entity id="vr-dashboard" position="0 1.8 -3" visible="false" class="panel-glow">
+      <!-- Marco del panel con efecto de brillo -->
+      <a-plane width="8" height="4.5" color="#0a1a30" opacity="0.9" transparent="true" rotation="0 0 0" 
+               material="shader: flat; metalness: 0.2; roughness: 0.8;">
+        <a-animation attribute="material.opacity" from="0.9" to="0.95" dur="3000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-plane>
+      <a-plane width="7.8" height="4.3" color="#001020" opacity="0.95" transparent="true" rotation="0 0 0" 
+               position="0 0 0.01" material="shader: flat; metalness: 0.3; roughness: 0.7;"></a-plane>
+      
+      <!-- Título del panel con animación -->
+      <a-text value="ESTACIÓN HORUS" color="#00eaff" position="0 2.0 0.1" 
+              align="center" width="7.5" font="exo2bold" shader="flat"
+              animation="property: position; from: 0 2.0 0.1; to: 0 2.05 0.1; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate"></a-text>
+      
+      <!-- Línea divisoria con pulso -->
+      <a-plane width="7.5" height="0.02" color="#00eaff" position="0 1.7 0.1" opacity="0.7">
+        <a-animation attribute="opacity" from="0.7" to="1" dur="2000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-plane>
+      
+      <!-- FILA 1: Temperatura y Humedad -->
+      <a-entity position="-2.5 1.2 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌡️ TEMPERATURA" color="#FF5722" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-temp-text" value="-- °C" color="#FF5722" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-temp-desc" value="Temperatura ambiente" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0 1.2 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="💧 HUMEDAD" color="#2196F3" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-hum-text" value="-- %" color="#2196F3" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-hum-desc" value="Humedad relativa" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="2.5 1.2 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🔽 PRESIÓN" color="#9E9E9E" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-press-text" value="-- hPa" color="#9E9E9E" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-press-desc" value="Presión atmosférica" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- FILA 2: Altitud, PM2.5 y PM10 -->
+      <a-entity position="-2.5 -0.3 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="⛰️ ALTITUD" color="#673AB7" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-alt-text" value="-- m" color="#673AB7" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-alt-desc" value="Sobre nivel del mar" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0 -0.3 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌫️ PM2.5" color="#FF9800" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-pm25-text" value="-- μg/m³" color="#FF9800" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-pm25-desc" value="Partículas finas" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="2.5 -0.3 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌫️ PM10" color="#F44336" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-pm10-text" value="-- μg/m³" color="#F44336" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-pm10-desc" value="Partículas gruesas" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- FILA 3: Viento, Gas y Lluvia -->
+      <a-entity position="-2.5 -1.8 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="💨 VIENTO" color="#4CAF50" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-wind-text" value="-- m/s" color="#4CAF50" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-wind-desc" value="Velocidad del viento" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0 -1.8 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="⛽ GAS" color="#FFEB3B" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-gas-text" value="-- %" color="#FFEB3B" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-gas-desc" value="Nivel de monóxido" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="2.5 -1.8 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="2.4" height="1.5" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌧️ LLUVIA" color="#2196F3" position="0 0.4 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-rain-text" value="no" color="#2196F3" position="0 -0.1 0" 
+                  align="center" width="2.2" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 2.0; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="vr-rain-desc" value="Precipitación actual" color="#888" position="0 -0.5 0" 
+                  align="center" width="2.2" font="roboto" shader="flat"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- Dirección del viento -->
+      <a-entity position="0 -3.0 0.1" class="sensor-glow">
+        <a-entity look-at="#vr-camera">
+          <a-plane width="4.0" height="1.0" color="#152540" opacity="0.75" transparent="true" radius="0.2" 
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🧭 DIRECCIÓN DEL VIENTO" color="#E91E63" position="-0.5 0.2 0" 
+                  align="left" width="3.5" font="roboto" shader="flat"></a-text>
+          <a-text id="vr-winddir-text" value="-- °" color="#E91E63" position="0.5 -0.2 0" 
+                  align="right" width="3.5" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 3.0; letterSpacing: 5; whiteSpace: nowrap; align: right"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- Efecto de partículas decorativas -->
+      <a-entity position="3.5 2.0 0.2">
+        <a-sphere radius="0.03" color="#00eaff" opacity="0.7"></a-sphere>
+        <a-animation attribute="position" from="3.5 2.0 0.2" to="3.5 2.5 0.2" dur="3000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-entity>
+      
+      <a-entity position="-3.5 2.0 0.2">
+        <a-sphere radius="0.03" color="#00eaff" opacity="0.7"></a-sphere>
+        <a-animation attribute="position" from="-3.5 2.0 0.2" to="-3.5 2.5 0.2" dur="4000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <!-- Escena AR -->
+  <a-scene id="ar-scene" 
+           embedded
+           arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+           device-orientation-permission-ui="enabled: false"
+           vr-mode-ui="enabled: false"
+           style="display: none;">
+    
+    <!-- Plano para detectar superficies -->
+    <a-entity id="surface-detector" 
+              geometry="primitive: plane; width: 10; height: 10" 
+              material="color: #00ff00; opacity: 0.1; transparent: true"
+              rotation="-90 0 0"
+              visible="false">
+    </a-entity>
+    
+    <!-- Panel AR (se colocará donde haga click) -->
+    <a-entity id="ar-dashboard" visible="false" class="panel-glow">
+      <!-- Marco del panel -->
+      <a-plane width="1.2" height="0.7" color="#0a1a30" opacity="0.9" transparent="true" rotation="0 0 0" position="0 0.35 0"
+               material="shader: flat; metalness: 0.2; roughness: 0.8;">
+        <a-animation attribute="material.opacity" from="0.9" to="0.95" dur="3000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-plane>
+      <a-plane width="1.18" height="0.68" color="#001020" opacity="0.95" transparent="true" rotation="0 0 0" position="0 0.35 0.01"
+               material="shader: flat; metalness: 0.3; roughness: 0.7;"></a-plane>
+      
+      <!-- Título del panel -->
+      <a-text value="ESTACIÓN HORUS" color="#00eaff" position="0 0.65 0.01" 
+              align="center" width="1.1" font="exo2bold" shader="flat"
+              animation="property: position; from: 0 0.65 0.01; to: 0 0.67 0.01; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate"></a-text>
+      
+      <!-- Línea divisoria -->
+      <a-plane width="1.1" height="0.01" color="#00eaff" position="0 0.58 0.01" opacity="0.7">
+        <a-animation attribute="opacity" from="0.7" to="1" dur="2000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-plane>
+      
+      <!-- FILA 1: Temperatura y Humedad -->
+      <a-entity position="-0.4 0.5 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌡️ TEMP" color="#FF5722" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-temp-text" value="-- °C" color="#FF5722" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0 0.5 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="💧 HUM" color="#2196F3" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-hum-text" value="-- %" color="#2196F3" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0.4 0.5 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🔽 PRES" color="#9E9E9E" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-press-text" value="-- hPa" color="#9E9E9E" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- FILA 2: Altitud, PM2.5 y PM10 -->
+      <a-entity position="-0.4 0.2 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="⛰️ ALT" color="#673AB7" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-alt-text" value="-- m" color="#673AB7" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0 0.2 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌫️ PM2.5" color="#FF9800" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-pm25-text" value="--" color="#FF9800" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0.4 0.2 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌫️ PM10" color="#F44336" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-pm10-text" value="--" color="#F44336" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- FILA 3: Viento, Gas y Lluvia -->
+      <a-entity position="-0.4 -0.1 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="💨 VIENTO" color="#4CAF50" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-wind-text" value="--" color="#4CAF50" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0 -0.1 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="⛽ GAS" color="#FFEB3B" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-gas-text" value="--" color="#FFEB3B" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity position="0.4 -0.1 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.4" height="0.25" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🌧️ LLUVIA" color="#2196F3" position="0 0.08 0" 
+                  align="center" width="0.35" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+          <a-text id="ar-rain-text" value="no" color="#2196F3" position="0 -0.05 0" 
+                  align="center" width="0.35" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.3; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- Dirección del viento -->
+      <a-entity position="0 -0.35 0.01" class="sensor-glow">
+        <a-entity look-at="[camera]">
+          <a-plane width="0.65" height="0.18" color="#152540" opacity="0.75" transparent="true" radius="0.03"
+                   material="shader: flat; metalness: 0.2; roughness: 0.9;"></a-plane>
+          <a-text value="🧭 DIRECCIÓN" color="#E91E63" position="-0.3 0 0" 
+                  align="left" width="0.6" font="roboto" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.6; letterSpacing: 5; whiteSpace: nowrap; align: left"></a-text>
+          <a-text id="ar-winddir-text" value="--" color="#E91E63" position="0.3 0 0" 
+                  align="right" width="0.6" font="exo2bold" shader="flat" 
+                  text="shader: sdf; baseline: center; width: 0.6; letterSpacing: 5; whiteSpace: nowrap; align: right"></a-text>
+        </a-entity>
+      </a-entity>
+      
+      <!-- Efecto de partículas decorativas -->
+      <a-entity position="0.55 0.65 0.02">
+        <a-sphere radius="0.015" color="#00eaff" opacity="0.7"></a-sphere>
+        <a-animation attribute="position" from="0.55 0.65 0.02" to="0.55 0.7 0.02" dur="3000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-entity>
+      
+      <a-entity position="-0.55 0.65 0.02">
+        <a-sphere radius="0.015" color="#00eaff" opacity="0.7"></a-sphere>
+        <a-animation attribute="position" from="-0.55 0.65 0.02" to="-0.55 0.7 0.02" dur="4000" 
+                     direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
+      </a-entity>
     </a-entity>
 
     <!-- Cámara AR -->
-    <a-entity camera></a-entity>
+    <a-entity id="ar-camera" camera></a-entity>
   </a-scene>
 
   <script>
-    // Configuración MQTT (WSS seguro)
+    // Variables globales
+    let currentMode = "3d";
+    let arPanelPlaced = false;
+    let arPanelPosition = { x: 0, y: 0, z: 0 };
+    let mqttConnected = false;
+    let mqttClient;
+    let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Elementos UI
+    const loader = document.getElementById("loader");
+    const dashboardPanel = document.getElementById("dashboard-panel");
+    const vrDashboard = document.getElementById("vr-dashboard");
+    const arDashboard = document.getElementById("ar-dashboard");
+    const removePanelBtn = document.getElementById("remove-panel-btn");
+    const arClickInstruction = document.getElementById("ar-click-instruction");
+    
+    // Botones de modo
+    const mode3dBtn = document.getElementById("3d-mode-btn");
+    const vrModeBtn = document.getElementById("vr-mode-btn");
+    const arModeBtn = document.getElementById("ar-mode-btn");
+    
+    // Botones móviles
+    const mode3dBtnMobile = document.getElementById("3d-mode-btn-mobile");
+    const vrModeBtnMobile = document.getElementById("vr-mode-btn-mobile");
+    const arModeBtnMobile = document.getElementById("ar-mode-btn-mobile");
+    
+    // Configuración MQTT
     const broker = "broker.hivemq.com";
-    const port = 8884; // Puerto WSS (seguro)
-    const clientId = "ar-horus-" + Math.random().toString(16).substr(2, 8);
-    const client = new Paho.MQTT.Client(broker, port, "/mqtt", clientId);
-
-    // Elementos UI (interfaz fija)
-    const ledUI = document.getElementById("status-led-ui");
-    const statusTextUI = document.getElementById("status-text-ui");
-
-    function setConnected(connected) {
-      // Actualizar interfaz fija
-      ledUI.className = connected ? "led connected" : "led";
-      statusTextUI.textContent = connected ? "Conectado" : "Desconectado";
-    }
-
-    function decodeUTF8(str) {
-      try {
-        return decodeURIComponent(escape(str));
-      } catch (e) {
-        return str;
-      }
-    }
-
-    // Eventos MQTT
-    client.onConnectionLost = () => setConnected(false);
-
-    client.onMessageArrived = (message) => {
-      const topic = message.destinationName;
-      let payload = decodeUTF8(message.payloadString.trim());
-
-      // Ajustar: Lluvia y Gas como porcentajes
-      if (topic === "horus/vvb/lluvia") {
-        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
-        document.getElementById("rain-text").setAttribute("value", raining ? "sí" : "no");
-      }
-      else if (topic === "horus/vvb/gas") {
-        const gasValue = parseFloat(payload);
-        if (!isNaN(gasValue)) {
-          const percent = Math.max(0, Math.min(100, (100 - gasValue / 10))).toFixed(1);
-          document.getElementById("gas-text").setAttribute("value", `${percent}%`);
-        } else {
-          document.getElementById("gas-text").setAttribute("value", "0%");
-        }
-      }
-      else {
-        // Para todos los demás, solo mostrar valor
-        switch (topic) {
-          case "horus/vvb/temperatura":
-            document.getElementById("temp-text").setAttribute("value", `${payload}°C`);
-            break;
-          case "horus/vvb/humedad":
-            document.getElementById("hum-text").setAttribute("value", `${payload}%`);
-            break;
-          case "horus/vvb/presion":
-            document.getElementById("press-text").setAttribute("value", `${payload}hPa`);
-            break;
-          case "horus/vvb/altitud":
-            document.getElementById("alt-text").setAttribute("value", `${payload}m`);
-            break;
-          case "horus/vvb/pm25":
-            document.getElementById("pm25-text").setAttribute("value", payload);
-            break;
-          case "horus/vvb/pm10":
-            document.getElementById("pm10-text").setAttribute("value", payload);
-            break;
-          case "horus/vvb/wind_speed":
-            document.getElementById("wind-text").setAttribute("value", `${payload}m/s`);
-            break;
-          case "horus/vvb/wind_direction":
-            document.getElementById("winddir-text").setAttribute("value", `${payload}°`);
-            break;
-        }
-      }
-
-      setConnected(true);
-    };
-
-    // Conectar al cargar
-    window.addEventListener("load", () => {
-      // Esperar a que AR.js esté listo
+    const port = 8884;
+    const clientId = "horus-station-" + Math.random().toString(16).substr(2, 8);
+    
+    // Función para crear efecto de onda
+    function createRipple(event, element) {
+      const ripple = document.createElement('span');
+      ripple.classList.add('ripple');
+      element.appendChild(ripple);
+      
+      const rect = element.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = event ? event.clientX - rect.left - size/2 : rect.width/2;
+      const y = event ? event.clientY - rect.top - size/2 : rect.height/2;
+      
+      ripple.style.width = `${size}px`;
+      ripple.style.height = `${size}px`;
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+      
       setTimeout(() => {
-        client.connect({
+        ripple.remove();
+      }, 600);
+    }
+    
+    // Función para detectar si es móvil
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    
+    // Inicializar MQTT
+    function initMQTT() {
+      mqttClient = new Paho.MQTT.Client(broker, port, "/mqtt", clientId);
+      
+      // Elementos UI
+      const ledUI = document.getElementById("status-led-ui");
+      const statusTextUI = document.getElementById("status-text-ui");
+      
+      function setConnected(connected) {
+        mqttConnected = connected;
+        ledUI.className = connected ? "led connected" : "led";
+        statusTextUI.textContent = connected ? "Conectado" : "Desconectado";
+        
+        // Mostrar u ocultar loader
+        if (connected && loader.style.display !== "none") {
+          setTimeout(() => {
+            loader.style.display = "none";
+            if (currentMode === "3d") dashboardPanel.setAttribute("visible", "true");
+            if (currentMode === "vr") vrDashboard.setAttribute("visible", "true");
+            if (currentMode === "ar" && arPanelPlaced) arDashboard.setAttribute("visible", "true");
+          }, 500);
+        }
+      }
+      
+      function decodeUTF8(str) {
+        try {
+          return decodeURIComponent(escape(str));
+        } catch (e) {
+          return str;
+        }
+      }
+      
+      // Actualizar valores en todos los modos
+      function updateAllDisplays(topic, payload) {
+        // Modo 3D normal
+        if (topic === "horus/vvb/lluvia") {
+          const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
+          document.getElementById("rain-text").setAttribute("value", raining ? "sí" : "no");
+          document.getElementById("vr-rain-text").setAttribute("value", raining ? "sí" : "no");
+          document.getElementById("ar-rain-text").setAttribute("value", raining ? "sí" : "no");
+        }
+        else if (topic === "horus/vvb/gas") {
+          const gasValue = parseFloat(payload);
+          if (!isNaN(gasValue)) {
+            const percent = Math.max(0, Math.min(100, (100 - gasValue / 10))).toFixed(1);
+            document.getElementById("gas-text").setAttribute("value", `${percent}%`);
+            document.getElementById("vr-gas-text").setAttribute("value", `${percent}%`);
+            document.getElementById("ar-gas-text").setAttribute("value", `${percent}%`);
+          } else {
+            document.getElementById("gas-text").setAttribute("value", "0%");
+            document.getElementById("vr-gas-text").setAttribute("value", "0%");
+            document.getElementById("ar-gas-text").setAttribute("value", "0%");
+          }
+        }
+        else {
+          // Para todos los demás, actualizar en todos los modos
+          switch (topic) {
+            case "horus/vvb/temperatura":
+              document.getElementById("temp-text").setAttribute("value", `${payload} °C`);
+              document.getElementById("vr-temp-text").setAttribute("value", `${payload} °C`);
+              document.getElementById("ar-temp-text").setAttribute("value", `${payload}°C`);
+              break;
+            case "horus/vvb/humedad":
+              document.getElementById("hum-text").setAttribute("value", `${payload} %`);
+              document.getElementById("vr-hum-text").setAttribute("value", `${payload} %`);
+              document.getElementById("ar-hum-text").setAttribute("value", `${payload}%`);
+              break;
+            case "horus/vvb/presion":
+              document.getElementById("press-text").setAttribute("value", `${payload} hPa`);
+              document.getElementById("vr-press-text").setAttribute("value", `${payload} hPa`);
+              document.getElementById("ar-press-text").setAttribute("value", `${payload}hPa`);
+              break;
+            case "horus/vvb/altitud":
+              document.getElementById("alt-text").setAttribute("value", `${payload} m`);
+              document.getElementById("vr-alt-text").setAttribute("value", `${payload} m`);
+              document.getElementById("ar-alt-text").setAttribute("value", `${payload}m`);
+              break;
+            case "horus/vvb/pm25":
+              document.getElementById("pm25-text").setAttribute("value", `${payload} μg/m³`);
+              document.getElementById("vr-pm25-text").setAttribute("value", `${payload} μg/m³`);
+              document.getElementById("ar-pm25-text").setAttribute("value", payload);
+              break;
+            case "horus/vvb/pm10":
+              document.getElementById("pm10-text").setAttribute("value", `${payload} μg/m³`);
+              document.getElementById("vr-pm10-text").setAttribute("value", `${payload} μg/m³`);
+              document.getElementById("ar-pm10-text").setAttribute("value", payload);
+              break;
+            case "horus/vvb/wind_speed":
+              document.getElementById("wind-text").setAttribute("value", `${payload} m/s`);
+              document.getElementById("vr-wind-text").setAttribute("value", `${payload} m/s`);
+              document.getElementById("ar-wind-text").setAttribute("value", `${payload}m/s`);
+              break;
+            case "horus/vvb/wind_direction":
+              document.getElementById("winddir-text").setAttribute("value", `${payload} °`);
+              document.getElementById("vr-winddir-text").setAttribute("value", `${payload} °`);
+              document.getElementById("ar-winddir-text").setAttribute("value", `${payload}°`);
+              break;
+          }
+        }
+      }
+      
+      // Eventos MQTT
+      mqttClient.onConnectionLost = (responseObject) => {
+        if (responseObject.errorCode !== 0) {
+          console.log("Conexión MQTT perdida: " + responseObject.errorMessage);
+        }
+        setConnected(false);
+      };
+      
+      mqttClient.onMessageArrived = (message) => {
+        const topic = message.destinationName;
+        let payload = decodeUTF8(message.payloadString.trim());
+        updateAllDisplays(topic, payload);
+        setConnected(true);
+      };
+      
+      // Intentar conectar
+      try {
+        mqttClient.connect({
           useSSL: true,
           onSuccess: () => {
             setConnected(true);
@@ -285,7 +1274,7 @@
             ];
             
             topics.forEach(topic => {
-              client.subscribe(topic, {
+              mqttClient.subscribe(topic, {
                 onSuccess: () => console.log(`Suscrito a ${topic}`),
                 onFailure: (error) => console.error(`Error suscribiendo a ${topic}:`, error)
               });
@@ -294,10 +1283,261 @@
           onFailure: (error) => {
             setConnected(false);
             console.error("Error MQTT:", error.errorMessage || error);
+            
+            // Reintentar conexión cada 5 segundos
+            setTimeout(() => {
+              if (!mqttConnected) {
+                console.log("Reintentando conexión MQTT...");
+                initMQTT();
+              }
+            }, 5000);
           }
         });
-      }, 2000); // Esperar un poco para que AR.js se inicialice
-    });
-  </script>
-</body>
-</html>
+      } catch (error) {
+        console.error("Error al inicializar MQTT:", error);
+        // Reintentar conexión
+        setTimeout(() => {
+          if (!mqttConnected) {
+            initMQTT();
+          }
+        }, 5000);
+      }
+    }
+    
+    // Configurar modo AR
+    function setupARMode() {
+      const arScene = document.getElementById("ar-scene");
+      const arCamera = document.getElementById("ar-camera");
+      const surfaceDetector = document.getElementById("surface-detector");
+      const arDashboard = document.getElementById("ar-dashboard");
+      
+      // Variables de estado
+      let isDetectingSurface = true;
+      let lastTapTime = 0;
+      
+      // Configurar superficie detectada
+      surfaceDetector.addEventListener('click', function(evt) {
+        if (!isDetectingSurface || !mqttConnected) return;
+        
+        const now = Date.now();
+        // Evitar múltiples clics rápidos
+        if (now - lastTapTime < 300) return;
+        lastTapTime = now;
+        
+        // Obtener posición del clic
+        const intersects = evt.detail.intersectedEl;
+        if (intersects) {
+          const position = intersects.object3D.getWorldPosition(new THREE.Vector3());
+          
+          // Colocar el panel ligeramente por encima de la superficie
+          arPanelPosition = {
+            x: position.x,
+            y: position.y + 0.35, // Altura del panel
+            z: position.z
+          };
+          
+          // Actualizar posición del panel
+          arDashboard.setAttribute('position', arPanelPosition);
+          arDashboard.setAttribute('visible', 'true');
+          
+          // Mostrar botón para eliminar
+          removePanelBtn.style.display = "block";
+          
+          // Actualizar estado
+          arPanelPlaced = true;
+          isDetectingSurface = false;
+          
+          // Ocultar instrucciones
+          arClickInstruction.style.display = "none";
+          document.getElementById("ar-instructions").style.display = "none";
+        }
+      });
+      
+      // Configurar botón para eliminar panel
+      removePanelBtn.addEventListener('click', function() {
+        createRipple(event, this);
+        arDashboard.setAttribute('visible', 'false');
+        arPanelPlaced = false;
+        isDetectingSurface = true;
+        
+        // Mostrar instrucciones de nuevo
+        arClickInstruction.style.display = "block";
+        document.getElementById("ar-instructions").style.display = "block";
+        
+        // Ocultar botón de eliminar
+        removePanelBtn.style.display = "none";
+      });
+      
+      // Añadir evento para detectar superficies
+      setTimeout(() => {
+        isDetectingSurface = true;
+        arClickInstruction.style.display = "block";
+        document.getElementById("ar-instructions").style.display = "block";
+      }, 1000);
+      
+      // Configurar movimiento y zoom en AR
+      let touchStartDistance = 0;
+      let initialPanelPosition = { ...arPanelPosition };
+      
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2 && arPanelPlaced) {
+          // Calcular distancia entre los dos dedos
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          touchStartDistance = Math.sqrt(dx * dx + dy * dy);
+          
+          // Guardar posición actual del panel
+          initialPanelPosition = { ...arPanelPosition };
+        }
+      });
+      
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 2 && arPanelPlaced) {
+          e.preventDefault();
+          
+          // Calcular nueva distancia
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          // Calcular escala
+          const scale = distance / touchStartDistance;
+          
+          // Aplicar escala al panel (limitado entre 0.5 y 2.0)
+          const currentScale = arDashboard.components.scale.data;
+          const newScale = Math.max(0.5, Math.min(2.0, currentScale.x * scale));
+          
+          arDashboard.setAttribute('scale', `${newScale} ${newScale} ${newScale}`);
+          
+          // Actualizar distancia inicial
+          touchStartDistance = distance;
+        }
+      }, { passive: false });
+      
+      // Configurar gesto de arrastrar
+      let isDragging = false;
+      let lastTouchX = 0;
+      let lastTouchY = 0;
+      
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1 && arPanelPlaced) {
+          isDragging = true;
+          lastTouchX = e.touches[0].clientX;
+          lastTouchY = e.touches[0].clientY;
+        }
+      });
+      
+      document.addEventListener('touchmove', function(e) {
+        if (isDragging && arPanelPlaced) {
+          e.preventDefault();
+          
+          const deltaX = e.touches[0].clientX - lastTouchX;
+          const deltaY = e.touches[0].clientY - lastTouchY;
+          
+          // Convertir movimiento táctil a movimiento 3D
+          const camera = arCamera.components.camera.camera;
+          const direction = new THREE.Vector3(0, 0, -1);
+          direction.applyQuaternion(camera.quaternion);
+          
+          // Calcular movimiento lateral
+          const right = new THREE.Vector3(1, 0, 0);
+          right.applyQuaternion(camera.quaternion);
+          
+          // Actualizar posición
+          arPanelPosition.x += right.x * deltaX * 0.005;
+          arPanelPosition.z += right.z * deltaX * 0.005;
+          arPanelPosition.y += direction.y * deltaY * 0.005;
+          
+          arDashboard.setAttribute('position', arPanelPosition);
+          
+          // Actualizar posiciones de referencia
+          lastTouchX = e.touches[0].clientX;
+          lastTouchY = e.touches[0].clientY;
+        }
+      }, { passive: false });
+      
+      document.addEventListener('touchend', function() {
+        isDragging = false;
+      });
+    }
+    
+    // Cambiar modo
+    function setMode(mode) {
+      // Ocultar todas las escenas
+      document.getElementById("normal-scene").style.display = "none";
+      document.getElementById("vr-scene").style.display = "none";
+      document.getElementById("ar-scene").style.display = "none";
+      
+      // Resetear botones
+      if (mode3dBtn) mode3dBtn.classList.remove("active");
+      if (vrModeBtn) vrModeBtn.classList.remove("active");
+      if (arModeBtn) arModeBtn.classList.remove("active");
+      
+      if (mode3dBtnMobile) mode3dBtnMobile.classList.remove("active");
+      if (vrModeBtnMobile) vrModeBtnMobile.classList.remove("active");
+      if (arModeBtnMobile) arModeBtnMobile.classList.remove("active");
+      
+      // Mostrar escena seleccionada
+      if (mode === "3d") {
+        document.getElementById("normal-scene").style.display = "block";
+        if (mode3dBtn) mode3dBtn.classList.add("active");
+        if (mode3dBtnMobile) mode3dBtnMobile.classList.add("active");
+        currentMode = "3d";
+        
+        // Asegurar que el panel es visible si hay conexión
+        if (mqttConnected) {
+          dashboardPanel.setAttribute("visible", "true");
+        }
+      } 
+      else if (mode === "vr") {
+        document.getElementById("vr-scene").style.display = "block";
+        if (vrModeBtn) vrModeBtn.classList.add("active");
+        if (vrModeBtnMobile) vrModeBtnMobile.classList.add("active");
+        currentMode = "vr";
+        
+        // Asegurar que el panel es visible si hay conexión
+        if (mqttConnected) {
+          vrDashboard.setAttribute("visible", "true");
+        }
+      }
+      else if (mode === "ar") {
+        // Verificar si estamos en móvil
+        if (isMobileDevice()) {
+          document.getElementById("ar-scene").style.display = "block";
+          if (arModeBtn) arModeBtn.classList.add("active");
+          if (arModeBtnMobile) arModeBtnMobile.classList.add("active");
+          currentMode = "ar";
+          
+          // Inicializar AR.js si es necesario
+          if (!window.THREEx) {
+            const script = document.createElement('script');
+            script.src = 'https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js';
+            script.onload = function() {
+              setupARMode();
+            };
+            document.head.appendChild(script);
+          } else {
+            setupARMode();
+          }
+        } else {
+          document.getElementById("ar-mode-warning").style.display = "block";
+          setTimeout(() => {
+            document.getElementById("ar-mode-warning").style.display = "none";
+            setMode("3d"); // Volver a modo 3D
+          }, 3000);
+        }
+      }
+    }
+
+    // Eventos de los botones
+    if (mode3dBtn) {
+      mode3dBtn.addEventListener("click", () => {
+        createRipple(event, mode3dBtn);
+        setMode("3d");
+      });
+    }
+    
+    if (vrModeBtn) {
+      vrModeBtn.addEventListener("click", () => {
+        createRipple(event, vrModeBtn);
+        setM
