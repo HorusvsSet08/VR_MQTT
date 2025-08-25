@@ -12,7 +12,6 @@
   </style>
 </head>
 <body>
-  <!-- Escena VR con TÚ en el centro -->
   <a-scene background="color: #001020" vr-mode-ui="enabled: true" device-orientation-permission-ui="enabled: false">
     
     <!-- ¡TÚ estás aquí! (posición de la cámara) -->
@@ -46,105 +45,105 @@
               align="center" width="5" shader="flat"></a-text>
     </a-entity>
 
-    <!-- DATOS ALREDEDOR DE TI (círculo de 360°) -->
+    <!-- DATOS ALREDEDOR DE TI (círculo de 360° a 2.5m) -->
     <!-- Temperatura - frente a ti -->
-    <a-entity position="0 1.5 -5">
-      <a-text id="temp-text" value="🌡️ --°C" color="#FF5722" align="center" 
-              width="4" font="exo2bold" shader="flat" 
-              rotation="0 180 0"></a-text>
-      <a-text value="TEMPERATURA" color="#FFF" position="0 -0.6 0" align="center" 
-              width="4" font="roboto" shader="flat" 
-              rotation="0 180 0"></a-text>
+    <a-entity position="0 1.5 -2.5">
+      <a-entity look-at="[camera]">
+        <a-text id="temp-text" value="🌡️ --°C" color="#FF5722" align="center" 
+                width="4" font="exo2bold" shader="flat"></a-text>
+        <a-text value="TEMPERATURA" color="#FFF" position="0 -0.6 0" align="center" 
+                width="4" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- Humedad - derecha -->
-    <a-entity position="3.5 1.5 -3.5">
-      <a-text id="hum-text" value="💧 --%" color="#2196F3" align="center" 
-              width="4" font="exo2bold" shader="flat" 
-              rotation="0 135 0"></a-text>
-      <a-text value="HUMEDAD" color="#FFF" position="0 -0.6 0" align="center" 
-              width="4" font="roboto" shader="flat" 
-              rotation="0 135 0"></a-text>
+    <a-entity position="1.8 1.5 -1.8">
+      <a-entity look-at="[camera]">
+        <a-text id="hum-text" value="💧 --%" color="#2196F3" align="center" 
+                width="4" font="exo2bold" shader="flat"></a-text>
+        <a-text value="HUMEDAD" color="#FFF" position="0 -0.6 0" align="center" 
+                width="4" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- Presión - derecha delante -->
-    <a-entity position="5 1.5 0">
-      <a-text id="press-text" value="🔽 -- hPa" color="#9E9E9E" align="center" 
-              width="5" font="exo2bold" shader="flat" 
-              rotation="0 90 0"></a-text>
-      <a-text value="PRESIÓN" color="#FFF" position="0 -0.6 0" align="center" 
-              width="5" font="roboto" shader="flat" 
-              rotation="0 90 0"></a-text>
+    <a-entity position="2.5 1.5 0">
+      <a-entity look-at="[camera]">
+        <a-text id="press-text" value="🔽 -- hPa" color="#9E9E9E" align="center" 
+                width="5" font="exo2bold" shader="flat"></a-text>
+        <a-text value="PRESIÓN" color="#FFF" position="0 -0.6 0" align="center" 
+                width="5" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- Altitud - izquierda delante -->
-    <a-entity position="-5 1.5 0">
-      <a-text id="alt-text" value="⛰️ -- m" color="#673AB7" align="center" 
-              width="4" font="exo2bold" shader="flat" 
-              rotation="0 -90 0"></a-text>
-      <a-text value="ALTITUD" color="#FFF" position="0 -0.6 0" align="center" 
-              width="4" font="roboto" shader="flat" 
-              rotation="0 -90 0"></a-text>
+    <a-entity position="-2.5 1.5 0">
+      <a-entity look-at="[camera]">
+        <a-text id="alt-text" value="⛰️ -- m" color="#673AB7" align="center" 
+                width="4" font="exo2bold" shader="flat"></a-text>
+        <a-text value="ALTITUD" color="#FFF" position="0 -0.6 0" align="center" 
+                width="4" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- PM2.5 - izquierda -->
-    <a-entity position="-3.5 1.5 -3.5">
-      <a-text id="pm25-text" value="🌫️ -- μg/m³" color="#FF9800" align="center" 
-              width="5" font="exo2bold" shader="flat" 
-              rotation="0 -135 0"></a-text>
-      <a-text value="PM2.5" color="#FFF" position="0 -0.6 0" align="center" 
-              width="5" font="roboto" shader="flat" 
-              rotation="0 -135 0"></a-text>
+    <a-entity position="-1.8 1.5 -1.8">
+      <a-entity look-at="[camera]">
+        <a-text id="pm25-text" value="🌫️ -- μg/m³" color="#FF9800" align="center" 
+                width="5" font="exo2bold" shader="flat"></a-text>
+        <a-text value="PM2.5" color="#FFF" position="0 -0.6 0" align="center" 
+                width="5" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- PM10 - atrás derecha -->
-    <a-entity position="3.5 1.5 3.5">
-      <a-text id="pm10-text" value="🌫️ -- μg/m³" color="#F44336" align="center" 
-              width="5" font="exo2bold" shader="flat" 
-              rotation="0 45 0"></a-text>
-      <a-text value="PM10" color="#FFF" position="0 -0.6 0" align="center" 
-              width="5" font="roboto" shader="flat" 
-              rotation="0 45 0"></a-text>
+    <a-entity position="1.8 1.5 1.8">
+      <a-entity look-at="[camera]">
+        <a-text id="pm10-text" value="🌫️ -- μg/m³" color="#F44336" align="center" 
+                width="5" font="exo2bold" shader="flat"></a-text>
+        <a-text value="PM10" color="#FFF" position="0 -0.6 0" align="center" 
+                width="5" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- Viento (velocidad) - atrás -->
-    <a-entity position="0 1.5 5">
-      <a-text id="wind-text" value="💨 -- m/s" color="#4CAF50" align="center" 
-              width="5" font="exo2bold" shader="flat" 
-              rotation="0 180 0"></a-text>
-      <a-text value="VIENTO" color="#FFF" position="0 -0.6 0" align="center" 
-              width="5" font="roboto" shader="flat" 
-              rotation="0 180 0"></a-text>
+    <a-entity position="0 1.5 2.5">
+      <a-entity look-at="[camera]">
+        <a-text id="wind-text" value="💨 -- m/s" color="#4CAF50" align="center" 
+                width="5" font="exo2bold" shader="flat"></a-text>
+        <a-text value="VIENTO" color="#FFF" position="0 -0.6 0" align="center" 
+                width="5" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- Gas - atrás izquierda (como porcentaje) -->
-    <a-entity position="-3.5 1.5 3.5">
-      <a-text id="gas-text" value="⛽ --%" color="#FFEB3B" align="center" 
-              width="5" font="exo2bold" shader="flat" 
-              rotation="0 -45 0"></a-text>
-      <a-text value="GAS" color="#FFF" position="0 -0.6 0" align="center" 
-              width="5" font="roboto" shader="flat" 
-              rotation="0 -45 0"></a-text>
+    <a-entity position="-1.8 1.5 1.8">
+      <a-entity look-at="[camera]">
+        <a-text id="gas-text" value="⛽ --%" color="#FFEB3B" align="center" 
+                width="5" font="exo2bold" shader="flat"></a-text>
+        <a-text value="GAS" color="#FFF" position="0 -0.6 0" align="center" 
+                width="5" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- Lluvia - derecha atrás (como sí/no) -->
-    <a-entity position="4.6 1.5 1.9">
-      <a-text id="rain-text" value="🌧️ no" color="#2196F3" align="center" 
-              width="4" font="exo2bold" shader="flat" 
-              rotation="0 22.5 0"></a-text>
-      <a-text value="LLUVIA" color="#FFF" position="0 -0.6 0" align="center" 
-              width="4" font="roboto" shader="flat" 
-              rotation="0 22.5 0"></a-text>
+    <a-entity position="2.2 1.5 0.9">
+      <a-entity look-at="[camera]">
+        <a-text id="rain-text" value="🌧️ no" color="#2196F3" align="center" 
+                width="4" font="exo2bold" shader="flat"></a-text>
+        <a-text value="LLUVIA" color="#FFF" position="0 -0.6 0" align="center" 
+                width="4" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
 
     <!-- Dirección del viento - izquierda atrás -->
-    <a-entity position="-4.6 1.5 1.9">
-      <a-text id="winddir-text" value="🧭 --°" color="#E91E63" align="center" 
-              width="4" font="exo2bold" shader="flat" 
-              rotation="0 -22.5 0"></a-text>
-      <a-text value="DIR. VIENTO" color="#FFF" position="0 -0.6 0" align="center" 
-              width="5" font="roboto" shader="flat" 
-              rotation="0 -22.5 0"></a-text>
+    <a-entity position="-2.2 1.5 0.9">
+      <a-entity look-at="[camera]">
+        <a-text id="winddir-text" value="🧭 --°" color="#E91E63" align="center" 
+                width="4" font="exo2bold" shader="flat"></a-text>
+        <a-text value="DIR. VIENTO" color="#FFF" position="0 -0.6 0" align="center" 
+                width="5" font="roboto" shader="flat"></a-text>
+      </a-entity>
     </a-entity>
   </a-scene>
 
