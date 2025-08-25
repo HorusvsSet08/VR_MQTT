@@ -485,7 +485,7 @@
     </a-entity>
 
     <!-- PANEL PRINCIPAL (frente al usuario) -->
-    <a-entity id="dashboard-panel" position="0 1.8 -3" visible="false" class="panel-glow">
+    <a-entity id="dashboard-panel" position="0 2.2 -3" visible="false" class="panel-glow"> <!-- ¡ALTURA AJUSTADA A 2.2! -->
       <!-- Marco del panel con efecto de brillo -->
       <a-plane width="8" height="4.5" color="#0a1a30" opacity="0.9" transparent="true" rotation="0 0 0"></a-plane>
       <a-plane width="7.8" height="4.3" color="#001020" opacity="0.95" transparent="true" rotation="0 0 0" 
@@ -684,7 +684,7 @@
     </a-entity>
 
     <!-- PANEL PRINCIPAL (frente al usuario) -->
-    <a-entity id="vr-dashboard" position="0 1.8 -3" visible="false" class="panel-glow">
+    <a-entity id="vr-dashboard" position="0 2.2 -3" visible="false" class="panel-glow"> <!-- ¡ALTURA AJUSTADA A 2.2! -->
       <!-- Marco del panel con efecto de brillo -->
       <a-plane width="8" height="4.5" color="#0a1a30" opacity="0.9" transparent="true" rotation="0 0 0"></a-plane>
       <a-plane width="7.8" height="4.3" color="#001020" opacity="0.95" transparent="true" rotation="0 0 0" 
@@ -867,8 +867,8 @@
     <!-- Panel AR (se colocará donde haga click) -->
     <a-entity id="ar-dashboard" visible="false" class="panel-glow">
       <!-- Marco del panel -->
-      <a-plane width="1.2" height="0.7" color="#0a1a30" opacity="0.9" transparent="true" rotation="0 0 0" position="0 0.35 0"></a-plane>
-      <a-plane width="1.18" height="0.68" color="#001020" opacity="0.95" transparent="true" rotation="0 0 0" position="0 0.35 0.01"></a-plane>
+      <a-plane width="1.2" height="0.7" color="#0a1a30" opacity="0.9" transparent="true" rotation="0 0 0" position="0 0.5 0"></a-plane> <!-- ¡ALTURA AJUSTADA A 0.5! -->
+      <a-plane width="1.18" height="0.68" color="#001020" opacity="0.95" transparent="true" rotation="0 0 0" position="0 0.5 0.01"></a-plane> <!-- ¡ALTURA AJUSTADA A 0.5! -->
       
       <!-- Título del panel -->
       <a-text value="ESTACIÓN HORUS" color="#00eaff" position="0 0.65 0.01" 
@@ -1272,10 +1272,11 @@
         if (intersects) {
           const position = intersects.object3D.getWorldPosition(new THREE.Vector3());
           
-          // Colocar el panel ligeramente por encima de la superficie
+          // ¡ALTURA AJUSTADA A 0.5!
+          // Colocar el panel más alto sobre la superficie
           arPanelPosition = {
             x: position.x,
-            y: position.y + 0.35, // Altura del panel
+            y: position.y + 0.5, // Altura del panel aumentada a 0.5
             z: position.z
           };
           
@@ -1493,76 +1494,4 @@
         setMode("ar");
       });
     }
-    
-    // Eventos de los botones móviles
-    if (mode3dBtnMobile) {
-      mode3dBtnMobile.addEventListener("click", () => {
-        createRipple(event, mode3dBtnMobile);
-        setMode("3d");
-      });
-    }
-    
-    if (vrModeBtnMobile) {
-      vrModeBtnMobile.addEventListener("click", () => {
-        createRipple(event, vrModeBtnMobile);
-        setMode("vr");
-      });
-    }
-    
-    if (arModeBtnMobile) {
-      arModeBtnMobile.addEventListener("click", () => {
-        createRipple(event, arModeBtnMobile);
-        setMode("ar");
-      });
-    }
-
-    // Inicializar aplicación
-    window.addEventListener("load", () => {
-      // Configurar interfaz según dispositivo
-      const mobileOnlyElements = document.querySelectorAll('.mobile-only');
-      const desktopOnlyElements = document.querySelectorAll('.desktop-only');
-      
-      if (isMobileDevice()) {
-        // Modo móvil: mostrar botones en la parte inferior
-        mobileOnlyElements.forEach(el => el.style.display = 'block');
-        desktopOnlyElements.forEach(el => el.style.display = 'none');
-        
-        // Asegurar que el modo 3D es el activo
-        if (mode3dBtnMobile) mode3dBtnMobile.classList.add("active");
-      } else {
-        // Modo escritorio: solo mostrar modo 3D
-        mobileOnlyElements.forEach(el => el.style.display = 'none');
-        desktopOnlyElements.forEach(el => el.style.display = 'block');
-      }
-      
-      // Iniciar conexión MQTT
-      initMQTT();
-      
-      // Si no hay conexión en 10 segundos, mostrar mensaje
-      setTimeout(() => {
-        if (!mqttConnected && loader.style.display !== "none") {
-          const loaderContent = document.querySelector("#loader-content");
-          loaderContent.innerHTML = `
-            <div class="spinner"></div>
-            <div class="loader-text error-text">Error al conectar. Reintentando...</div>
-          `;
-          
-          // Reintentar conexión
-          if (mqttClient) {
-            try {
-              mqttClient.disconnect();
-            } catch (e) {}
-          }
-          initMQTT();
-        }
-      }, 10000);
-      
-      // Animación de entrada para el loader
-      setTimeout(() => {
-        const loaderContent = document.querySelector("#loader-content");
-        loaderContent.classList.add("fade-in");
-      }, 100);
-    });
-  </script>
-</body>
-</html>
+  
