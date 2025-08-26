@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD</title>
+  <title>HORUS STATION - DASHBOARD COMPLETO</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -557,6 +557,92 @@
     .nipple .back {
       transform: translate(-50%, -50%);
     }
+    
+    /* Panel de depuración */
+    #debug-panel {
+      position: fixed;
+      top: 80px;
+      left: 15px;
+      right: 15px;
+      background: rgba(0, 10, 30, 0.85);
+      border-radius: 15px;
+      padding: 15px;
+      z-index: 1000;
+      max-height: 60vh;
+      overflow-y: auto;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 234, 255, 0.2);
+    }
+    
+    #debug-panel h3 {
+      color: var(--primary);
+      margin-top: 0;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    #debug-content {
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #a0a0a0;
+      max-height: 40vh;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    
+    .debug-entry {
+      margin-bottom: 5px;
+      padding-left: 10px;
+      border-left: 2px solid var(--primary);
+    }
+    
+    .debug-info {
+      color: #88ccff;
+    }
+    
+    .debug-error {
+      color: #ff8888;
+    }
+    
+    .debug-success {
+      color: #88ff88;
+    }
+    
+    .debug-button {
+      background: var(--primary);
+      color: #000;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      transition: var(--transition);
+    }
+    
+    .debug-button:hover {
+      transform: scale(1.05);
+      box-shadow: var(--glow);
+    }
+    
+    .debug-button.test {
+      background: var(--warning);
+    }
+    
+    .debug-button.reconnect {
+      background: var(--success);
+    }
+    
+    .debug-button.close {
+      background: var(--danger);
+      float: right;
+      padding: 5px 10px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -567,6 +653,18 @@
   <div id="connection-status">
     <span class="led" id="connection-led"></span>
     <span id="connection-text">Conectando...</span>
+  </div>
+  
+  <!-- Panel de depuración -->
+  <div id="debug-panel">
+    <h3>
+      Panel de Depuración
+      <button class="debug-button close" id="debug-close">✕</button>
+    </h3>
+    
+    <div id="debug-content"></div>
+    
+    <button class="debug-button reconnect" id="reconnect-button">Reconectar</button>
   </div>
   
   <!-- BARRA INFERIOR ÚNICA - Para otros controles -->
@@ -753,12 +851,40 @@
     let cameraRig, camera;
     let isVRMode = false;
     let lastDataTime = null;
+    let debugPanelVisible = false;
     
     // Elementos UI
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
     const loader = document.getElementById('loader');
     const loaderText = document.querySelector('.loader-text');
+    const debugPanel = document.getElementById('debug-panel');
+    const debugContent = document.getElementById('debug-content');
+    const debugClose = document.getElementById('debug-close');
+    const reconnectButton = document.getElementById('reconnect-button');
+    
+    // Función para agregar mensajes al panel de depuración
+    function logDebug(message, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = `debug-entry debug-${type}`;
+      
+      // Obtener hora actual
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      
+      entry.innerHTML = `<span style="color:#666">[${timeStr}]</span> ${message}`;
+      debugContent.appendChild(entry);
+      debugContent.scrollTop = debugContent.scrollHeight;
+      
+      // Registrar en la consola del navegador
+      if (type === 'error') {
+        console.error(`[DEBUG] ${message}`);
+      } else if (type === 'success') {
+        console.log(`[DEBUG] ${message}`);
+      } else {
+        console.log(`[DEBUG] ${message}`);
+      }
+    }
     
     // Actualizar estado de conexión
     function updateConnectionStatus(connected, message = "") {
@@ -809,7 +935,7 @@
       camera = document.getElementById('camera');
       
       if (!cameraRig || !camera) {
-        console.error("No se encontraron elementos de cámara");
+        logDebug("No se encontraron elementos de cámara", 'error');
         return;
       }
       
@@ -905,11 +1031,139 @@
       document.getElementById('mode-vr-mobile').addEventListener('click', () => {
         setMode('vr');
       });
+      
+      // Panel de depuración
+      document.addEventListener('keydown', (e) => {
+        // Ctrl + Alt + D para mostrar/ocultar panel de depuración
+        if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'd') {
+          debugPanelVisible = !debugPanelVisible;
+          debugPanel.style.display = debugPanelVisible ? 'block' : 'none';
+        }
+      });
+      
+      // Botón para cerrar el panel de depuración
+      debugClose.addEventListener('click', () => {
+        debugPanelVisible = false;
+        debugPanel.style.display = 'none';
+      });
+      
+      // Botón de reconexión
+      reconnectButton.addEventListener('click', () => {
+        logDebug("Forzando reconexión con HiveMQ...", 'info');
+        if (mqttClient) {
+          logDebug("Desconectando cliente existente...", 'info');
+          try {
+            mqttClient.end();
+          } catch (error) {
+            logDebug(`Error al desconectar: ${error.message}`, 'error');
+          }
+        }
+        connectToHiveMQ();
+      });
+    }
+    
+    // Función para formatear valores según el sensor
+    function formatSensorValue(topic, value) {
+      // Convertir a número si es posible
+      const numValue = parseFloat(value);
+      
+      // Manejo especial para cada sensor
+      if (topic === "horus/vvb/temperatura") {
+        if (!isNaN(numValue)) {
+          return numValue.toFixed(1);
+        }
+      } else if (topic === "horus/vvb/humedad") {
+        if (!isNaN(numValue)) {
+          return Math.min(100, Math.max(0, numValue)).toFixed(1);
+        }
+      } else if (topic === "horus/vvb/presion") {
+        if (!isNaN(numValue)) {
+          return Math.round(numValue);
+        }
+      } else if (topic === "horus/vvb/altitud") {
+        if (!isNaN(numValue)) {
+          return Math.round(numValue);
+        }
+      } else if (topic === "horus/vvb/gas") {
+        if (!isNaN(numValue)) {
+          // Escala lógica para el sensor MQ-2 (0-100%)
+          const percent = Math.min(100, Math.max(0, numValue / 10)).toFixed(1);
+          return percent;
+        }
+      } else if (topic === "horus/vvb/lluvia") {
+        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(value.toLowerCase());
+        return raining ? "sí" : "no";
+      } else if (topic === "horus/vvb/pm25" || topic === "horus/vvb/pm10") {
+        if (!isNaN(numValue)) {
+          return Math.round(numValue);
+        }
+      } else if (topic === "horus/vvb/wind_direction") {
+        if (!isNaN(numValue)) {
+          return Math.round(numValue);
+        }
+      }
+      
+      // Si no se puede formatear, devolver el valor original
+      return value;
+    }
+    
+    // Actualizar efectos visuales según el valor
+    function updateVisualEffects(topic, value) {
+      const numValue = parseFloat(value);
+      
+      if (isNaN(numValue)) return;
+      
+      let element;
+      
+      if (topic === "horus/vvb/temperatura") {
+        element = document.getElementById('temp-value').parentNode;
+        if (numValue > 30) {
+          element.setAttribute('color', '#ff4d4d');
+          element.classList.add('value-danger');
+          element.classList.remove('value-warning');
+        } else if (numValue > 25) {
+          element.setAttribute('color', '#ffcc00');
+          element.classList.add('value-warning');
+          element.classList.remove('value-danger');
+        } else {
+          element.setAttribute('color', '#FF5722');
+          element.classList.remove('value-warning', 'value-danger');
+        }
+      } else if (topic === "horus/vvb/humedad") {
+        element = document.getElementById('hum-value').parentNode;
+        if (numValue > 80) {
+          element.setAttribute('color', '#ff4d4d');
+          element.classList.add('value-danger');
+          element.classList.remove('value-warning');
+        } else if (numValue > 60) {
+          element.setAttribute('color', '#ffcc00');
+          element.classList.add('value-warning');
+          element.classList.remove('value-danger');
+        } else {
+          element.setAttribute('color', '#2196F3');
+          element.classList.remove('value-warning', 'value-danger');
+        }
+      } else if (topic === "horus/vvb/gas") {
+        element = document.getElementById('gas-value').parentNode;
+        if (numValue > 50) {
+          element.setAttribute('color', '#ff4d4d');
+          element.classList.add('value-danger');
+          element.classList.remove('value-warning');
+        } else if (numValue > 20) {
+          element.setAttribute('color', '#ffcc00');
+          element.classList.add('value-warning');
+          element.classList.remove('value-danger');
+        } else {
+          element.setAttribute('color', '#FFEB3B');
+          element.classList.remove('value-warning', 'value-danger');
+        }
+      }
     }
     
     // Conectar al broker HiveMQ usando mqtt.js
     function connectToHiveMQ() {
       updateLoaderMessage("Conectando a HiveMQ...");
+      logDebug("Intentando conectar a HiveMQ...", 'info');
       
       // URL del broker HiveMQ
       const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
@@ -923,8 +1177,8 @@
         reconnectPeriod: 3000
       };
       
-      console.log("Intentando conectar a HiveMQ:", brokerUrl);
-      console.log("Opciones de conexión:", options);
+      logDebug(`Conectando a: ${brokerUrl}`, 'info');
+      logDebug(`Opciones: ${JSON.stringify(options)}`, 'info');
       
       try {
         // Crear cliente MQTT usando mqtt.js
@@ -932,16 +1186,16 @@
         
         // Manejar conexión exitosa
         mqttClient.on("connect", () => {
-          console.log("✅ Conexión establecida con HiveMQ");
+          logDebug("✅ Conexión establecida con HiveMQ", 'success');
           updateConnectionStatus(true, "Conectado a HiveMQ");
           
           // Suscribirse a todos los topics de la estación Horus
           mqttClient.subscribe("horus/#", (err) => {
             if (err) {
-              console.error("❌ Error al suscribirse a horus/#:", err);
+              logDebug(`❌ Error al suscribirse a horus/#: ${err}`, 'error');
               updateLoaderMessage("Error al suscribirse a los topics");
             } else {
-              console.log("🔍 Suscrito a horus/# (todos los topics Horus)");
+              logDebug("🔍 Suscrito a horus/# (todos los topics Horus)", 'success');
               updateLoaderMessage("Conectado a HiveMQ - Suscrito a topics");
             }
           });
@@ -950,11 +1204,14 @@
         // Manejar mensajes recibidos
         mqttClient.on("message", (topic, payload) => {
           const value = payload.toString().trim();
-          if (!value) return;
+          if (!value) {
+            logDebug(`⚠️ Valor vacío recibido para el topic: ${topic}`, 'warning');
+            return;
+          }
           
           // Registrar en consola
-          console.log("📩 Tópico recibido:", topic);
-          console.log("📦 Valor:", value);
+          logDebug(`📩 Tópico recibido: ${topic}`, 'info');
+          logDebug(`📦 Valor: ${value}`, 'info');
           
           // Actualizar el tiempo de última recepción
           lastDataTime = Date.now();
@@ -974,91 +1231,54 @@
           
           const elementId = topicMap[topic];
           if (!elementId) {
-            console.warn("⚠️ Tópico no mapeado:", topic);
+            logDebug(`⚠️ Tópico no mapeado: ${topic}`, 'warning');
             return;
           }
           
           const element = document.getElementById(elementId);
-          if (!element) return;
+          if (!element) {
+            logDebug(`⚠️ Elemento no encontrado: ${elementId}`, 'warning');
+            return;
+          }
+          
+          // Formatear el valor según el sensor
+          const formattedValue = formatSensorValue(topic, value);
           
           // Actualizar el valor en el dashboard
-          if (topic === "horus/vvb/lluvia") {
-            const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(value.toLowerCase());
-            element.setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
-          } else {
-            element.setAttribute('text', `value: ${value}`);
-          }
+          element.setAttribute('text', `value: ${formattedValue}`);
+          
+          // Actualizar efectos visuales según el valor
+          updateVisualEffects(topic, formattedValue);
+          
+          logDebug(`✅ Actualizado ${topic} con valor: ${formattedValue}`, 'success');
         });
         
         // Manejar errores
         mqttClient.on("error", (err) => {
-          console.error("❌ Error MQTT:", err);
+          logDebug(`❌ Error MQTT: ${err.message}`, 'error');
           updateLoaderMessage(`Error: ${err.message}<br>Verifica tu conexión`);
         });
         
         // Manejar cierre de conexión
         mqttClient.on("close", () => {
-          console.log("🔌 Conexión cerrada");
+          logDebug("🔌 Conexión cerrada", 'info');
           updateConnectionStatus(false, "Conexión cerrada");
+          
+          // Intentar reconectar
+          if (mqttConnected) {
+            logDebug("🔄 Intentando reconectar...", 'info');
+            setTimeout(connectToHiveMQ, 5000);
+          }
         });
         
       } catch (error) {
-        console.error("❌ Error al crear cliente MQTT:", error);
+        logDebug(`❌ Error al crear cliente MQTT: ${error.message}`, 'error');
         updateLoaderMessage(`Error: ${error.message}<br>Verifica tu configuración`);
-      }
-    }
-    
-    // Actualizar el dashboard con los datos recibidos
-    function updateDashboard(topic, payload) {
-      if (topic === "horus/vvb/temperatura") {
-        document.getElementById('temp-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/humedad") {
-        document.getElementById('hum-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/presion") {
-        document.getElementById('press-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/altitud") {
-        document.getElementById('alt-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/gas") {
-        document.getElementById('gas-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/lluvia") {
-        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
-        document.getElementById('rain-value').setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
-      } else if (topic === "horus/vvb/pm25") {
-        document.getElementById('pm25-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/pm10") {
-        document.getElementById('pm10-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/wind_direction") {
-        document.getElementById('wind-value').setAttribute('text', `value: ${payload}`);
       }
     }
     
     // Inicializar la aplicación
     window.addEventListener('load', () => {
-      // Crear partículas de fondo
-      const particlesContainer = document.getElementById('particles');
-      const particleCount = isMobile ? 30 : 60;
-      
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        
-        // Propiedades aleatorias
-        const size = Math.random() * 3 + 1;
-        const posX = Math.random() * 100;
-        const posY = Math.random() * 100;
-        const delay = Math.random() * 15;
-        const duration = Math.random() * 10 + 10;
-        
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        particle.style.left = `${posX}%`;
-        particle.style.top = `${posY}%`;
-        particle.style.animationDelay = `${delay}s`;
-        particle.style.animationDuration = `${duration}s`;
-        
-        particlesContainer.appendChild(particle);
-      }
-      
       // Configurar interfaz para móviles
       if (isMobile) {
         document.getElementById('bottom-bar').style.display = 'flex';
@@ -1067,6 +1287,11 @@
       // Inicializar elementos
       setupEventListeners();
       initJoystick();
+      
+      // Inicializar panel de depuración
+      debugPanel.style.display = 'none';
+      logDebug("Sistema de depuración inicializado", 'info');
+      logDebug("Presiona Ctrl + Alt + D para mostrar/ocultar el panel de depuración", 'info');
       
       // Conectar al broker HiveMQ
       connectToHiveMQ();
