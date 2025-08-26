@@ -173,7 +173,7 @@
       box-shadow: var(--glow);
     }
     
-    /* BARRA IZQUIERDA - NUEVO */
+    /* BARRA IZQUIERDA NUEVA - Para controlar la vista */
     #left-bar {
       position: fixed;
       left: 10px;
@@ -205,7 +205,7 @@
       color: white;
     }
     
-    /* BARRA INFERIOR - NUEVO */
+    /* BARRA INFERIOR NUEVA - Para otros controles */
     #bottom-bar {
       position: fixed;
       bottom: 20px;
@@ -610,6 +610,24 @@
     .nipple .back {
       transform: translate(-50%, -50%);
     }
+    
+    /* Botón de reintentar */
+    .retry-button {
+      background: var(--primary);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .retry-button:hover {
+      transform: scale(1.05);
+      box-shadow: var(--glow);
+    }
   </style>
 </head>
 <body>
@@ -787,7 +805,8 @@
   <!-- Loader de conexión -->
   <div class="loader" id="loader">
     <div class="loader-spinner"></div>
-    <div class="loader-text">Conectando a Estación Horus...<br>Probando brokers MQTT disponibles</div>
+    <div class="loader-text" id="loader-text">Conectando a Estación Horus...<br>Probando brokers MQTT disponibles</div>
+    <button class="retry-button" id="retry-button">Reintentar Conexión</button>
   </div>
 
   <script>
@@ -801,16 +820,26 @@
     let maxAttempts = 10;
     let currentBrokerIndex = 0;
     let isVRMode = false;
+    let pahoLoadAttempts = 0;
+    let maxPahoLoadAttempts = 3;
     
     // Lista de brokers MQTT de respaldo - ORDENADA POR CONFIABILIDAD CON GITHUB PAGES
     const mqttBrokers = [
       {
         host: "test.mosquitto.org",
+        port: 8080,
+        path: "/mqtt",
+        secure: false,  // Usar WS en lugar de WSS para evitar problemas de certificados
+        name: "Mosquitto (mejor para GitHub Pages)",
+        timeout: 10
+      },
+      {
+        host: "test.mosquitto.org",
         port: 8081,
         path: "/mqtt",
         secure: true,
-        name: "Mosquitto (mejor para GitHub Pages)",
-        timeout: 10
+        name: "Mosquitto SSL",
+        timeout: 8
       },
       {
         host: "mqtt.eclipseprojects.io",
@@ -822,7 +851,7 @@
       },
       {
         host: "broker.hivemq.com",
-        port: 8884,
+        port: 8000,
         path: "/mqtt",
         secure: true,
         name: "HiveMQ",
@@ -834,7 +863,8 @@
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
     const loader = document.getElementById('loader');
-    const loaderText = document.querySelector('.loader-text');
+    const loaderText = document.getElementById('loader-text');
+    const retryButton = document.getElementById('retry-button');
     
     // Verificar si Paho está disponible
     function isPahoReady() {
@@ -968,8 +998,16 @@
     // Inicializar conexión MQTT con múltiples brokers de respaldo
     function initMQTT() {
       if (!isPahoReady()) {
-        updateLoaderMessage("Esperando a que Paho MQTT se cargue...");
-        setTimeout(initMQTT, 500);
+        pahoLoadAttempts++;
+        
+        if (pahoLoadAttempts > maxPahoLoadAttempts) {
+          updateLoaderMessage("Error crítico: No se pudo cargar la biblioteca MQTT.<br>Verifica tu conexión a internet.");
+          console.error("Se alcanzó el máximo de intentos para cargar Paho");
+          return;
+        }
+        
+        updateLoaderMessage("Esperando a que Paho MQTT se cargue...<br>Intento " + pahoLoadAttempts + " de " + maxPahoLoadAttempts);
+        setTimeout(initMQTT, 1000);
         return;
       }
       
@@ -1220,6 +1258,15 @@
       
       // Configurar controles adicionales para móviles
       setupMobileControls();
+      
+      // Botón de reintentar
+      document.getElementById('retry-button').addEventListener('click', () => {
+        updateLoaderMessage("Reiniciando conexión MQTT...");
+        connectionAttempts = 0;
+        currentBrokerIndex = 0;
+        pahoLoadAttempts = 0;
+        initMQTT();
+      });
     }
     
     // Inicializar la aplicación
@@ -1249,4 +1296,59 @@
         particlesContainer.appendChild(particle);
       }
       
-      // Configurar inter
+      // Configurar interfaz para móviles
+      if (isMobile) {
+        document.getElementById('mobile-mode-selector').style.display = 'block';
+      }
+      
+      // Inicializar elementos
+      setupEventListeners();
+      initJoystick();
+      
+      // Verificar y esperar a que Paho esté listo
+      if (isPahoReady()) {
+        initMQTT();
+      } else {
+        // Intentar cargar Paho nuevamente si no está disponible
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js';
+        script.onload = function() {
+          console.log("Biblioteca Paho MQTT recargada");
+          initMQTT();
+        };
+        script.onerror = function() {
+          pahoLoadAttempts++;
+          if (pahoLoadAttempts <= maxPahoLoadAttempts) {
+            setTimeout(() => {
+              const newScript = document.createElement('script');
+              newScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js';
+              document.head.appendChild(newScript);
+            }, 1000);
+          } else {
+            updateLoaderMessage("Error: No se pudo cargar la biblioteca MQTT.<br>Haz clic en 'Reintentar Conexión'");
+            console.error("No se pudo cargar la biblioteca Paho MQTT después de múltiples intentos");
+          }
+        };
+        document.head.appendChild(script);
+      }
+      
+      // Ajustar posición inicial del panel
+      setTimeout(adjustDashboardPosition, 1000);
+      
+      // Ajustar posición cuando se entra/sale de VR
+      const scene = document.querySelector('a-scene');
+      if (scene) {
+        scene.addEventListener('enter-vr', () => {
+          isVRMode = true;
+          adjustDashboardPosition();
+        });
+        
+        scene.addEventListener('exit-vr', () => {
+          isVRMode = false;
+          adjustDashboardPosition();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
