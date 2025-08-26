@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD FUNCIONAL</title>
+  <title>HORUS STATION - DASHBOARD</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -11,18 +11,27 @@
   <!-- Cargar Paho MQTT -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js"></script>
   
+  <!-- Biblioteca para el joystick -->
+  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
+  
   <style>
     :root {
       --primary: #00eaff;
+      --primary-dark: #00aaff;
+      --secondary: #9d4edd;
       --dark-bg: #000a1a;
+      --panel-bg: #0a1a30;
+      --card-bg: #152540;
       --text: #e0e0e0;
       --text-secondary: #a0a0a0;
       --success: #4ade80;
       --warning: #facc15;
       --danger: #f87171;
+      --border-radius: 12px;
       --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       --shadow: 0 10px 30px rgba(0, 20, 50, 0.3);
       --glow: 0 0 15px rgba(0, 234, 255, 0.5);
+      --inner-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
     }
     
     * {
@@ -37,6 +46,31 @@
       color: var(--text);
       height: 100vh;
       position: relative;
+    }
+    
+    /* Efecto de partículas de fondo */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .particle {
+      position: absolute;
+      background: var(--primary);
+      border-radius: 50%;
+      opacity: 0.1;
+      animation: float 15s infinite linear;
+    }
+    
+    @keyframes float {
+      0% { transform: translateY(0) translateX(0); opacity: 0.1; }
+      50% { opacity: 0.3; }
+      100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
     }
     
     /* Indicador de conexión */
@@ -55,6 +89,11 @@
       backdrop-filter: blur(10px);
       box-shadow: var(--shadow);
       transition: var(--transition);
+    }
+    
+    #connection-status:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow);
     }
     
     .led {
@@ -82,6 +121,340 @@
       color: white;
       font-weight: 500;
       letter-spacing: 0.5px;
+    }
+    
+    /* Controles móviles */
+    #mobile-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: none;
+    }
+    
+    #vr-button {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    #vr-button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+      opacity: 0;
+      transition: var(--transition);
+      pointer-events: none;
+    }
+    
+    #vr-button:active::before {
+      opacity: 1;
+      transform: scale(0);
+    }
+    
+    #vr-button:hover {
+      transform: scale(1.05);
+      box-shadow: var(--glow);
+    }
+    
+    /* BARRA IZQUIERDA - CORREGIDA */
+    #left-bar {
+      position: fixed;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 60px;
+      height: 200px;
+      background: rgba(0, 10, 30, 0.7);
+      border-radius: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 234, 255, 0.2);
+      display: none;
+    }
+    
+    .control-icon {
+      font-size: 24px;
+      color: var(--primary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .control-icon:hover {
+      transform: scale(1.2);
+      color: white;
+    }
+    
+    /* BARRA INFERIOR - CORREGIDA (ÚNICA BARRA DE MENÚ) */
+    #bottom-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 250px;
+      height: 60px;
+      background: rgba(0, 10, 30, 0.7);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 234, 255, 0.2);
+      display: none;
+    }
+    
+    .mode-icon {
+      font-size: 28px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .mode-icon.active {
+      color: var(--primary);
+      transform: scale(1.1);
+    }
+    
+    /* Estilo para escritorio */
+    #desktop-controls {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1000;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .control-btn {
+      padding: 8px 15px;
+      background: rgba(0, 10, 30, 0.7);
+      color: var(--text);
+      border: 1px solid rgba(0, 234, 255, 0.2);
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: var(--transition);
+      backdrop-filter: blur(10px);
+    }
+    
+    .control-btn:hover {
+      background: rgba(0, 170, 255, 0.2);
+      border-color: var(--primary);
+    }
+    
+    /* Panel de datos 3D */
+    .sensor-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--border-radius);
+      background: var(--card-bg);
+      padding: 18px 20px;
+      text-align: center;
+      box-shadow: var(--inner-shadow);
+      transition: var(--transition);
+      border: 1px solid rgba(0, 234, 255, 0.1);
+    }
+    
+    .sensor-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 25px rgba(0, 20, 50, 0.4);
+      border-color: rgba(0, 234, 255, 0.3);
+    }
+    
+    .sensor-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    
+    .sensor-icon {
+      font-size: 28px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 234, 255, 0.1);
+      border-radius: 10px;
+    }
+    
+    .sensor-name {
+      color: var(--text-secondary);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    
+    .sensor-value {
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--primary);
+      line-height: 1.2;
+      text-shadow: 0 0 10px rgba(0, 234, 255, 0.2);
+      transition: var(--transition);
+    }
+    
+    .unit {
+      font-size: 16px;
+      color: var(--text-secondary);
+      font-weight: normal;
+    }
+    
+    /* Efectos para valores críticos */
+    .value-warning {
+      color: var(--warning);
+      text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
+    }
+    
+    .value-danger {
+      color: var(--danger);
+      text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
+    }
+    
+    /* Animaciones */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+      opacity: 0;
+    }
+    
+    /* Grid para las tarjetas */
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      padding: 15px;
+    }
+    
+    /* Estilos para móviles */
+    @media (max-width: 768px) {
+      .mobile-only {
+        display: block;
+      }
+      
+      .desktop-only {
+        display: none;
+      }
+      
+      .sensor-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 10px;
+      }
+      
+      .sensor-card {
+        padding: 12px 15px;
+      }
+      
+      .sensor-icon {
+        font-size: 22px;
+        width: 32px;
+        height: 32px;
+      }
+      
+      .sensor-name {
+        font-size: 13px;
+      }
+      
+      .sensor-value {
+        font-size: 20px;
+      }
+      
+      .unit {
+        font-size: 14px;
+      }
+      
+      #left-bar, #bottom-bar {
+        display: flex;
+      }
+    }
+    
+    /* Estilos para escritorio */
+    @media (min-width: 769px) {
+      .mobile-only {
+        display: none;
+      }
+      
+      .desktop-only {
+        display: block;
+      }
+    }
+    
+    /* Efecto de brillo en el dashboard */
+    .dashboard-glow {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .dashboard-glow::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, var(--primary), transparent, var(--secondary), transparent) center/400% 400% no-repeat;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      z-index: -1;
+      animation: rotate 15s linear infinite;
+    }
+    
+    @keyframes rotate {
+      100% { background-position: 400% 0; }
+    }
+    
+    /* Estilo para el título */
+    .dashboard-title {
+      text-align: center;
+      color: var(--primary);
+      font-size: 28px;
+      margin-bottom: 25px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      text-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
+      position: relative;
+      padding-bottom: 10px;
+    }
+    
+    .dashboard-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      border-radius: 3px;
     }
     
     /* Estilo para el loader */
@@ -127,76 +500,97 @@
       color: var(--danger);
     }
     
-    /* Panel de datos 3D */
-    .sensor-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: 12px;
-      background: #152540;
-      padding: 18px 20px;
-      text-align: center;
-      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-      border: 1px solid rgba(0, 234, 255, 0.1);
+    /* Estilo para el cursor */
+    .a-cursor {
+      cursor: pointer;
+      transition: var(--transition);
     }
     
-    .sensor-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 12px;
+    .a-cursor:hover {
+      scale: 1.2;
     }
     
-    .sensor-icon {
-      font-size: 28px;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 234, 255, 0.1);
-      border-radius: 10px;
+    /* Estilo para el joystick */
+    #joystick-container {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      width: 100px;
+      height: 100px;
+      z-index: 999;
+      display: none;
     }
     
-    .sensor-name {
-      color: #a0a0a0;
-      font-size: 15px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
+    .nipple {
+      position: absolute;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: rgba(0, 234, 255, 0.2);
+      box-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+      transform: translate(-50%, -50%);
+      transition: var(--transition);
     }
     
-    .sensor-value {
-      font-size: 26px;
-      font-weight: bold;
-      color: var(--primary);
-      line-height: 1.2;
-      text-shadow: 0 0 10px rgba(0, 234, 255, 0.2);
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    .front {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 5px rgba(0, 234, 255, 0.7);
     }
     
-    .unit {
-      font-size: 16px;
-      color: #a0a0a0;
-      font-weight: normal;
+    .nipple .front {
+      transform: translate(-50%, -50%);
+    }
+    
+    .back {
+      position: absolute;
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(0, 234, 255, 0.2);
+    }
+    
+    .nipple .back {
+      transform: translate(-50%, -50%);
     }
   </style>
 </head>
 <body>
+  <!-- Fondo de partículas -->
+  <div class="particles" id="particles"></div>
+  
   <!-- Indicador de conexión -->
   <div id="connection-status">
     <span class="led" id="connection-led"></span>
-    <span id="connection-text">Configurando...</span>
+    <span id="connection-text">Conectando...</span>
   </div>
-
+  
+  <!-- BARRA INFERIOR ÚNICA - Para otros controles -->
+  <div id="bottom-bar" class="mobile-only">
+    <div class="mode-icon active" id="mode-3d-mobile">📊</div>
+    <div class="mode-icon" id="mode-vr-mobile">🕶️</div>
+  </div>
+  
+  <!-- Controles móviles -->
+  <div id="joystick-container" class="mobile-only"></div>
+  <div id="mobile-controls" class="mobile-only">
+    <button id="vr-button">🕶️</button>
+  </div>
+  
   <!-- Escena 3D -->
-  <a-scene embedded style="width: 100%; height: 100vh;" vr-mode-ui="enabled: false">
+  <a-scene id="main-scene" embedded style="width: 100%; height: 100vh;" vr-mode-ui="enabled: false">
     <a-entity id="camera-rig" position="0 1.6 0">
       <a-entity id="camera" camera look-controls>
         <a-cursor 
           raycaster="objects: .sensor-card" 
           color="#00eaff" 
-          fuse="false">
+          fuse="false"
+          animation__click="property: scale; from: 1 1 1; to: 0.5 0.5 0.5; dur: 100; startEvents: click"
+          animation__fusing="property: scale; from: 1 1 1; to: 0.8 0.8 0.8; dur: 1500; easing: easeInCubic; startEvents: fusing">
         </a-cursor>
       </a-entity>
     </a-entity>
@@ -207,10 +601,15 @@
     
     <!-- Suelo con rejilla -->
     <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.2" transparent="true"></a-plane>
+    <a-entity position="0 0.01 0" rotation="-90 0 0" 
+              geometry="primitive: plane; width: 50; height: 50" 
+              material="color: #003366; transparent: true; opacity: 0.1">
+    </a-entity>
     
-    <!-- Panel de datos -->
-    <a-entity id="dashboard" position="0 1.2 -2.2">
+    <!-- Panel de datos - POSICION CORREGIDA (NO ESTÁ METIDO EN EL SUELO) -->
+    <a-entity id="dashboard" position="0 1.2 -1.5" class="dashboard-glow">
       <a-plane width="6" height="3.5" color="#0a1a30" opacity="0.9" transparent="true" radius="0.2"></a-plane>
+      <a-plane width="5.8" height="3.3" color="#000f2a" opacity="0.95" transparent="true" position="0 0 0.01"></a-plane>
       
       <a-text 
         value="ESTACIÓN HORUS" 
@@ -218,121 +617,143 @@
         position="0 1.3 0.1" 
         align="center" 
         width="5.5" 
-        font="exo2bold">
+        font="exo2bold" 
+        shader="flat"
+        animation="property: position; from: 0 1.3 0.1; to: 0 1.35 0.1; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
       </a-text>
       
       <!-- Temperatura -->
-      <a-entity position="-2 0.7 0.1">
+      <a-entity position="-2 0.7 0.1" class="sensor-card fade-in" style="animation-delay: 0.1s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌡️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="TEMPERATURA" color="#FF5722" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="temp-value" value="--" color="#FF5722" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="temp-value" value="--" color="#FF5722" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
         <a-text value="°C" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Humedad -->
-      <a-entity position="-0.5 0.7 0.1">
+      <a-entity position="-0.5 0.7 0.1" class="sensor-card fade-in" style="animation-delay: 0.2s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="💧" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="HUMEDAD" color="#2196F3" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="hum-value" value="--" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="hum-value" value="--" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
         <a-text value="%" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Presión -->
-      <a-entity position="1 0.7 0.1">
+      <a-entity position="1 0.7 0.1" class="sensor-card fade-in" style="animation-delay: 0.3s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🔽" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="PRESIÓN" color="#9E9E9E" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="press-value" value="--" color="#9E9E9E" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="press-value" value="--" color="#9E9E9E" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
         <a-text value="hPa" color="#a0a0a0" position="0.5 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Altitud -->
-      <a-entity position="-2 -0.3 0.1">
+      <a-entity position="-2 -0.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.4s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="⛰️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="ALTITUD" color="#673AB7" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="alt-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="alt-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
         <a-text value="m" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Gas -->
-      <a-entity position="-0.5 -0.3 0.1">
+      <a-entity position="-0.5 -0.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.5s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="⛽" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="GAS" color="#FFEB3B" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="gas-value" value="--" color="#FFEB3B" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="gas-value" value="--" color="#FFEB3B" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
         <a-text value="%" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Lluvia -->
-      <a-entity position="1 -0.3 0.1">
+      <a-entity position="1 -0.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.6s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌧️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="LLUVIA" color="#2196F3" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="rain-value" value="no" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="rain-value" value="no" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
       </a-entity>
       
       <!-- PM2.5 -->
-      <a-entity position="-2 -1.3 0.1">
+      <a-entity position="-2 -1.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.7s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="PM2.5" color="#9C27B0" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="pm25-value" value="--" color="#9C27B0" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="pm25-value" value="--" color="#9C27B0" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
         <a-text value="μg/m³" color="#a0a0a0" position="0.6 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- PM10 -->
-      <a-entity position="-0.5 -1.3 0.1">
+      <a-entity position="-0.5 -1.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.8s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="PM10" color="#673AB7" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="pm10-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="pm10-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
         <a-text value="μg/m³" color="#a0a0a0" position="0.6 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Dirección del Viento -->
-      <a-entity position="1 -1.3 0.1">
+      <a-entity position="1 -1.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.9s">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌀" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="VIENTO" color="#03A9F4" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="wind-value" value="--" color="#03A9F4" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text id="wind-value" value="--" color="#03A9F4" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
+                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
         <a-text value="°" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
+    </a-entity>
+    
+    <!-- Efecto de partículas decorativas -->
+    <a-entity position="0 2.5 -2">
+      <a-sphere radius="0.02" color="#00eaff" opacity="0.7"></a-sphere>
+      <a-animation attribute="position" from="0 2.5 -2" to="0 3 -2" dur="3000" 
+                   direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
     </a-entity>
   </a-scene>
 
   <!-- Loader de conexión -->
   <div class="loader" id="loader">
     <div class="loader-spinner"></div>
-    <div class="loader-text" id="loader-text">Conectando a Estación Horus...</div>
+    <div class="loader-text">Conectando a Estación Horus...<br>Probando HiveMQ</div>
   </div>
 
   <script>
     // Variables globales
+    let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let currentMode = "3d";
     let mqttClient;
     let mqttConnected = false;
+    let cameraRig, camera;
+    let isVRMode = false;
     
-    // CONFIGURACIÓN CORRECTA PARA HIVE MQ
+    // CONFIGURACIÓN CORRECTA PARA HIVEMQ
     const mqttConfig = {
       host: "broker.hivemq.com",
       port: 8883,  // ¡PUERTO CORRECTO PARA WSS!
@@ -345,7 +766,14 @@
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
     const loader = document.getElementById('loader');
-    const loaderText = document.getElementById('loader-text');
+    const loaderText = document.querySelector('.loader-text');
+    
+    // Verificar si Paho está disponible
+    function isPahoReady() {
+      return typeof Paho !== 'undefined' && 
+             typeof Paho.MQTT !== 'undefined' && 
+             typeof Paho.MQTT.Client !== 'undefined';
+    }
     
     // Actualizar estado de conexión
     function updateConnectionStatus(connected, message = "") {
@@ -361,9 +789,6 @@
             loader.style.display = 'none';
           }, 500);
         }, 800);
-      } else {
-        loader.style.display = 'flex';
-        loader.style.opacity = '1';
       }
     }
     
@@ -374,14 +799,20 @@
       }
     }
     
-    // Verificar si Paho está disponible
-    function isPahoReady() {
-      return typeof Paho !== 'undefined' && 
-             typeof Paho.MQTT !== 'undefined' && 
-             typeof Paho.MQTT.Client !== 'undefined';
+    // Ajustar posición del panel según el modo
+    function adjustDashboardPosition() {
+      const dashboard = document.getElementById('dashboard');
+      
+      if (isVRMode) {
+        // Posición para VR - más cerca y ligeramente más bajo
+        dashboard.setAttribute('position', '0 1.2 -1.0');
+      } else {
+        // Posición para 3D normal - ¡CORREGIDA! No está metido en el suelo
+        dashboard.setAttribute('position', '0 1.2 -1.5');
+      }
     }
     
-    // Conectar al broker con la configuración correcta
+    // Conectar al broker HiveMQ
     function connectToBroker() {
       updateLoaderMessage(`Conectando a ${mqttConfig.name}...`);
       
@@ -453,8 +884,9 @@
           },
           onFailure: (error) => {
             console.error(`Error al conectar: ${error.errorMessage || error}`);
+            updateLoaderMessage(`Error: ${error.errorMessage || 'Verifica tu configuración'}`);
             
-            // Intentar con alternativa
+            // Si HiveMQ falla, intentar con Mosquitto como respaldo
             console.log("Intentando con broker alternativo Mosquitto...");
             connectToMosquitto();
           }
@@ -581,8 +1013,149 @@
       }
     }
     
+    // Inicializar el joystick para móviles
+    function initJoystick() {
+      if (!isMobile) return;
+      
+      // Obtener referencias a la cámara
+      cameraRig = document.getElementById('camera-rig');
+      camera = document.getElementById('camera');
+      
+      if (!cameraRig || !camera) {
+        console.error("No se encontraron elementos de cámara");
+        return;
+      }
+      
+      // Configurar el joystick
+      const joystick = nipplejs.create({
+        zone: document.getElementById('joystick-container'),
+        size: 100,
+        threshold: 0.1,
+        color: 'rgba(0, 234, 255, 0.7)',
+        fadeTime: 250
+      });
+      
+      // Manejar el movimiento
+      joystick.on('move', (evt, data) => {
+        if (!cameraRig || !camera) return;
+        
+        const angle = data.angle.radian;
+        const force = data.force;
+        
+        // Calcular movimiento - AJUSTE DE SENSIBILIDAD
+        const moveSpeed = 0.03 * force; // Reducido para mejor control
+        const dx = Math.sin(angle) * moveSpeed;
+        const dz = Math.cos(angle) * moveSpeed;
+        
+        // Actualizar posición
+        const currentPos = cameraRig.getAttribute('position');
+        cameraRig.setAttribute('position', {
+          x: currentPos.x - dx,
+          y: currentPos.y,
+          z: currentPos.z - dz
+        });
+        
+        // Actualizar dirección de la cámara
+        if (force > 0.1) {
+          camera.setAttribute('rotation', {
+            x: 0,
+            y: (angle * (180 / Math.PI) - 90) % 360,
+            z: 0
+          });
+        }
+      });
+      
+      // Detener movimiento cuando se suelta
+      joystick.on('end', () => {
+        if (camera && cameraRig) {
+          camera.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+        }
+      });
+    }
+    
+    // Establecer modo
+    function setMode(mode) {
+      currentMode = mode;
+      
+      // Actualizar botones
+      document.querySelectorAll('.mode-icon').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      if (mode === '3d') {
+        document.getElementById('mode-3d-mobile').classList.add('active');
+        isVRMode = false;
+      } else if (mode === 'vr') {
+        document.getElementById('mode-vr-mobile').classList.add('active');
+        isVRMode = true;
+        enterVRMode();
+      }
+      
+      // Ajustar posición del panel
+      adjustDashboardPosition();
+    }
+    
+    // Cambiar a modo VR
+    function enterVRMode() {
+      const scene = document.querySelector('a-scene');
+      if (scene && scene.enterVR) {
+        scene.enterVR();
+        isVRMode = true;
+        adjustDashboardPosition();
+      }
+    }
+    
+    // Configurar eventos
+    function setupEventListeners() {
+      // Botón de VR
+      document.getElementById('vr-button').addEventListener('click', enterVRMode);
+      
+      // Botones de la barra inferior
+      document.getElementById('mode-3d-mobile').addEventListener('click', () => {
+        setMode('3d');
+      });
+      
+      document.getElementById('mode-vr-mobile').addEventListener('click', () => {
+        setMode('vr');
+      });
+    }
+    
     // Inicializar la aplicación
     window.addEventListener('load', () => {
+      // Crear partículas de fondo
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = isMobile ? 30 : 60;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // Propiedades aleatorias
+        const size = Math.random() * 3 + 1;
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        const delay = Math.random() * 15;
+        const duration = Math.random() * 10 + 10;
+        
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${posX}%`;
+        particle.style.top = `${posY}%`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+        
+        particlesContainer.appendChild(particle);
+      }
+      
+      // Configurar interfaz para móviles
+      if (isMobile) {
+        document.getElementById('bottom-bar').style.display = 'flex';
+      }
+      
+      // Inicializar elementos
+      setupEventListeners();
+      initJoystick();
+      
       // Verificar y esperar a que Paho esté listo
       if (isPahoReady()) {
         console.log("Biblioteca Paho MQTT cargada correctamente");
@@ -602,6 +1175,23 @@
           updateLoaderMessage("Error: No se pudo cargar la biblioteca MQTT.<br>Verifica tu conexión a internet.");
         };
         document.head.appendChild(script);
+      }
+      
+      // Ajustar posición inicial del panel
+      setTimeout(adjustDashboardPosition, 1000);
+      
+      // Ajustar posición cuando se entra/sale de VR
+      const scene = document.querySelector('a-scene');
+      if (scene) {
+        scene.addEventListener('enter-vr', () => {
+          isVRMode = true;
+          adjustDashboardPosition();
+        });
+        
+        scene.addEventListener('exit-vr', () => {
+          isVRMode = false;
+          adjustDashboardPosition();
+        });
       }
     });
   </script>
