@@ -11,27 +11,19 @@
   <!-- Cargar Paho MQTT con URL VERIFICADA y FUNCIONAL -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js"></script>
   
-  <!-- Biblioteca para el joystick -->
-  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
-  
   <style>
     :root {
       --primary: #00eaff;
-      --primary-dark: #00aaff;
-      --secondary: #9d4edd;
       --dark-bg: #000a1a;
       --panel-bg: #0a1a30;
-      --card-bg: #152540;
       --text: #e0e0e0;
       --text-secondary: #a0a0a0;
       --success: #4ade80;
       --warning: #facc15;
       --danger: #f87171;
-      --border-radius: 12px;
       --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       --shadow: 0 10px 30px rgba(0, 20, 50, 0.3);
       --glow: 0 0 15px rgba(0, 234, 255, 0.5);
-      --inner-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
     }
     
     * {
@@ -93,203 +85,20 @@
       letter-spacing: 0.5px;
     }
     
-    /* BARRA INFERIOR - CORREGIDA (ÚNICA BARRA DE MENÚ) */
-    #bottom-bar {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 250px;
-      height: 60px;
-      background: rgba(0, 10, 30, 0.7);
-      border-radius: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      z-index: 1000;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 234, 255, 0.2);
-      display: none;
-    }
-    
-    .mode-icon {
-      font-size: 28px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .mode-icon.active {
-      color: var(--primary);
-      transform: scale(1.1);
-    }
-    
-    /* Panel de datos 3D */
-    .sensor-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: var(--border-radius);
-      background: var(--card-bg);
-      padding: 18px 20px;
-      text-align: center;
-      box-shadow: var(--inner-shadow);
-      transition: var(--transition);
-      border: 1px solid rgba(0, 234, 255, 0.1);
-    }
-    
-    .sensor-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 25px rgba(0, 20, 50, 0.4);
-      border-color: rgba(0, 234, 255, 0.3);
-    }
-    
-    .sensor-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    
-    .sensor-icon {
-      font-size: 28px;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 234, 255, 0.1);
-      border-radius: 10px;
-    }
-    
-    .sensor-name {
-      color: var(--text-secondary);
-      font-size: 15px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-    }
-    
-    .sensor-value {
-      font-size: 26px;
-      font-weight: bold;
-      color: var(--primary);
-      line-height: 1.2;
-      text-shadow: 0 0 10px rgba(0, 234, 255, 0.2);
-      transition: var(--transition);
-    }
-    
-    .unit {
-      font-size: 16px;
-      color: var(--text-secondary);
-      font-weight: normal;
-    }
-    
-    /* Estilos para móviles */
-    @media (max-width: 768px) {
-      .mobile-only {
-        display: block;
-      }
-      
-      .desktop-only {
-        display: none;
-      }
-      
-      .sensor-card {
-        padding: 12px 15px;
-      }
-      
-      .sensor-icon {
-        font-size: 22px;
-        width: 32px;
-        height: 32px;
-      }
-      
-      .sensor-name {
-        font-size: 13px;
-      }
-      
-      .sensor-value {
-        font-size: 20px;
-      }
-      
-      .unit {
-        font-size: 14px;
-      }
-      
-      #bottom-bar {
-        display: flex;
-      }
-    }
-    
-    /* Estilos para escritorio */
-    @media (min-width: 769px) {
-      .mobile-only {
-        display: none;
-      }
-      
-      .desktop-only {
-        display: block;
-      }
-    }
-    
-    /* Estilo para el loader */
-    .loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--dark-bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      transition: var(--transition);
-    }
-    
-    .loader-spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid rgba(0, 234, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: var(--primary);
-      animation: spin 1s ease-in-out infinite;
-      margin-bottom: 20px;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .loader-text {
-      color: var(--primary);
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-align: center;
-      padding: 0 20px;
-    }
-    
-    .error-text {
-      color: var(--danger);
-    }
-    
     /* Panel de depuración */
     #debug-panel {
       position: fixed;
-      bottom: 80px;
+      top: 80px;
       left: 15px;
       right: 15px;
       background: rgba(0, 10, 30, 0.85);
       border-radius: 15px;
       padding: 15px;
       z-index: 1000;
-      max-height: 300px;
+      max-height: 60vh;
       overflow-y: auto;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(0, 234, 255, 0.2);
-      display: none;
     }
     
     #debug-panel h3 {
@@ -306,7 +115,7 @@
       font-size: 13px;
       line-height: 1.4;
       color: #a0a0a0;
-      max-height: 200px;
+      max-height: 40vh;
       overflow-y: auto;
       padding-right: 10px;
     }
@@ -386,6 +195,103 @@
       background: var(--primary);
       color: #000;
     }
+    
+    /* Estilo para el loader */
+    .loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--dark-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      transition: var(--transition);
+    }
+    
+    .loader-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(0, 234, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loader-text {
+      color: var(--primary);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-align: center;
+      padding: 0 20px;
+    }
+    
+    .error-text {
+      color: var(--danger);
+    }
+    
+    /* Panel de datos 3D */
+    .sensor-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #152540;
+      padding: 18px 20px;
+      text-align: center;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      border: 1px solid rgba(0, 234, 255, 0.1);
+    }
+    
+    .sensor-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    
+    .sensor-icon {
+      font-size: 28px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 234, 255, 0.1);
+      border-radius: 10px;
+    }
+    
+    .sensor-name {
+      color: #a0a0a0;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    
+    .sensor-value {
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--primary);
+      line-height: 1.2;
+      text-shadow: 0 0 10px rgba(0, 234, 255, 0.2);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .unit {
+      font-size: 16px;
+      color: #a0a0a0;
+      font-weight: normal;
+    }
   </style>
 </head>
 <body>
@@ -395,14 +301,28 @@
     <span id="connection-text">Configurando...</span>
   </div>
   
-  <!-- BARRA INFERIOR - Para otros controles -->
-  <div id="bottom-bar" class="mobile-only">
-    <div class="mode-icon active" id="mode-3d-mobile">📊</div>
-    <div class="mode-icon" id="mode-vr-mobile">🕶️</div>
+  <!-- Panel de depuración -->
+  <div id="debug-panel">
+    <h3>
+      Panel de Depuración
+      <button class="debug-button close" id="debug-close">✕</button>
+    </h3>
+    
+    <div class="debug-config">
+      <div class="config-option active" data-config="hivemq-8000">HiveMQ (8000/WSS)</div>
+      <div class="config-option" data-config="hivemq-8080">HiveMQ (8080/WS)</div>
+      <div class="config-option" data-config="eclipse">Eclipse (443/WSS)</div>
+      <div class="config-option" data-config="mosquitto">Mosquitto (8081/WSS)</div>
+    </div>
+    
+    <div id="debug-content"></div>
+    
+    <button class="debug-button reconnect" id="reconnect-button">Forzar Reconexión</button>
+    <button class="debug-button test" id="test-button">Probar Conexión</button>
   </div>
-  
+
   <!-- Escena 3D -->
-  <a-scene id="main-scene" embedded style="width: 100%; height: 100vh;" vr-mode-ui="enabled: false">
+  <a-scene embedded style="width: 100%; height: 100vh;" vr-mode-ui="enabled: false">
     <a-entity id="camera-rig" position="0 1.6 0">
       <a-entity id="camera" camera look-controls>
         <a-cursor 
@@ -539,36 +459,11 @@
     <div class="loader-text" id="loader-text">Configurando tu broker MQTT...</div>
   </div>
 
-  <!-- Panel de depuración -->
-  <div id="debug-panel">
-    <h3>
-      Panel de Depuración
-      <button class="debug-button close" id="debug-close">✕</button>
-    </h3>
-    
-    <div class="debug-config">
-      <div class="config-option active" data-config="hivemq-8000">HiveMQ (8000/WSS)</div>
-      <div class="config-option" data-config="hivemq-8080">HiveMQ (8080/WS)</div>
-      <div class="config-option" data-config="hivemq-1883">HiveMQ (1883/MQTT)</div>
-      <div class="config-option" data-config="eclipse">Eclipse (443/WSS)</div>
-      <div class="config-option" data-config="mosquitto">Mosquitto (8081/WSS)</div>
-    </div>
-    
-    <div id="debug-content"></div>
-    
-    <button class="debug-button reconnect" id="reconnect-button">Forzar Reconexión</button>
-    <button class="debug-button test" id="test-button">Probar Conexión</button>
-  </div>
-
   <script>
     // Variables globales
-    let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    let currentMode = "3d";
     let mqttClient;
     let mqttConnected = false;
-    let cameraRig, camera;
-    let isVRMode = false;
-    let debugPanelVisible = false;
+    let currentConfig = "hivemq-8000"; // Configuración por defecto
     
     // CONFIGURACIONES DE CONEXIÓN PROBADAS
     const connectionConfigs = {
@@ -588,14 +483,6 @@
         secure: false,
         description: "Conexión WebSocket no segura (puede fallar en GitHub Pages)"
       },
-      "hivemq-1883": {
-        name: "HiveMQ (1883/MQTT)",
-        host: "broker.hivemq.com",
-        port: 1883,
-        path: "",
-        secure: false,
-        description: "Conexión MQTT estándar (NO FUNCIONA desde navegadores)"
-      },
       "eclipse": {
         name: "Eclipse (443/WSS)",
         host: "mqtt.eclipseprojects.io",
@@ -613,8 +500,6 @@
         description: "Broker de respaldo (WSS)"
       }
     };
-    
-    let currentConfig = "hivemq-8000"; // Configuración por defecto
     
     // Elementos UI
     const connectionLed = document.getElementById('connection-led');
@@ -634,4 +519,325 @@
       
       // Obtener hora actual
       const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStar
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      
+      entry.innerHTML = `<span style="color:#666">[${timeStr}]</span> ${message}`;
+      debugContent.appendChild(entry);
+      debugContent.scrollTop = debugContent.scrollHeight;
+      
+      // Registrar en la consola del navegador
+      if (type === 'error') {
+        console.error(`[DEBUG] ${message}`);
+      } else if (type === 'success') {
+        console.log(`[DEBUG] ${message}`);
+      } else {
+        console.log(`[DEBUG] ${message}`);
+      }
+    }
+    
+    // Actualizar estado de conexión
+    function updateConnectionStatus(connected, message = "") {
+      mqttConnected = connected;
+      connectionLed.className = connected ? "led connected" : "led";
+      connectionText.textContent = connected ? "Conectado" : (message || "Desconectado");
+      
+      if (connected) {
+        // Ocultar loader después de conexión
+        setTimeout(() => {
+          loader.style.opacity = '0';
+          setTimeout(() => {
+            loader.style.display = 'none';
+          }, 500);
+        }, 800);
+      } else {
+        loader.style.display = 'flex';
+        loader.style.opacity = '1';
+      }
+    }
+    
+    // Mostrar mensaje en el loader
+    function updateLoaderMessage(message) {
+      if (loaderText) {
+        loaderText.innerHTML = message;
+      }
+    }
+    
+    // Verificar si Paho está disponible
+    function isPahoReady() {
+      return typeof Paho !== 'undefined' && 
+             typeof Paho.MQTT !== 'undefined' && 
+             typeof Paho.MQTT.Client !== 'undefined';
+    }
+    
+    // Probar conexión con la configuración actual
+    function testConnection() {
+      logDebug(`Iniciando prueba de conexión con: ${connectionConfigs[currentConfig].name}`, 'info');
+      logDebug(`Detalles: ${connectionConfigs[currentConfig].description}`, 'info');
+      logDebug(`Configuración: ${connectionConfigs[currentConfig].host}:${connectionConfigs[currentConfig].port}${connectionConfigs[currentConfig].path}`, 'info');
+      
+      // Generar un ID único para el cliente
+      const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
+      
+      try {
+        // Crear cliente MQTT
+        logDebug(`Creando cliente MQTT con ID: ${mqttClientId}`, 'info');
+        
+        // Verificar si Paho está listo
+        if (!isPahoReady()) {
+          logDebug("ERROR: La biblioteca Paho MQTT no está cargada", 'error');
+          updateLoaderMessage("Error: Biblioteca Paho no cargada");
+          return;
+        }
+        
+        mqttClient = new Paho.MQTT.Client(
+          connectionConfigs[currentConfig].host, 
+          connectionConfigs[currentConfig].port, 
+          connectionConfigs[currentConfig].path, 
+          mqttClientId
+        );
+        
+        // Configurar callbacks
+        mqttClient.onConnectionLost = (responseObject) => {
+          logDebug(`Conexión perdida: ${responseObject.errorMessage || 'Desconocido'}`, 'error');
+          updateConnectionStatus(false, "Conexión perdida");
+        };
+        
+        mqttClient.onMessageArrived = (message) => {
+          logDebug(`Mensaje recibido: ${message.destinationName} = ${message.payloadString}`, 'success');
+        };
+        
+        // Intentar conectar
+        logDebug("Intentando conectar al broker...", 'info');
+        updateLoaderMessage(`Conectando a ${connectionConfigs[currentConfig].name}...`);
+        
+        const connectOptions = {
+          useSSL: connectionConfigs[currentConfig].secure,
+          timeout: 10,
+          onSuccess: () => {
+            logDebug("¡Conexión establecida con éxito!", 'success');
+            updateConnectionStatus(true, "Conectado");
+            
+            // Suscribirse a un topic de prueba
+            const testTopic = "horus/vvb/test";
+            logDebug(`Suscrito a topic de prueba: ${testTopic}`, 'info');
+            
+            mqttClient.subscribe(testTopic, {
+              onSuccess: () => logDebug(`Suscrito correctamente a ${testTopic}`, 'success'),
+              onFailure: (error) => logDebug(`Error al suscribirse: ${error.errorMessage || error}`, 'error')
+            });
+          },
+          onFailure: (error) => {
+            logDebug(`Error de conexión: ${error.errorMessage || error}`, 'error');
+            updateConnectionStatus(false, `Error: ${error.errorMessage || 'Verifica configuración'}`);
+          }
+        };
+        
+        mqttClient.connect(connectOptions);
+        
+      } catch (error) {
+        logDebug(`Error crítico al crear cliente: ${error.message}`, 'error');
+        updateLoaderMessage(`Error: ${error.message}<br>Verifica tu configuración`);
+      }
+    }
+    
+    // Conectar al broker con la configuración seleccionada
+    function connectToBroker() {
+      updateLoaderMessage(`Conectando a ${connectionConfigs[currentConfig].name}...`);
+      logDebug(`Iniciando conexión con: ${connectionConfigs[currentConfig].name}`, 'info');
+      
+      // Generar un ID único para el cliente
+      const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
+      
+      try {
+        // Crear cliente MQTT
+        logDebug(`Creando cliente MQTT con ID: ${mqttClientId}`, 'info');
+        
+        // Verificar si Paho está listo
+        if (!isPahoReady()) {
+          logDebug("ERROR: La biblioteca Paho MQTT no está cargada", 'error');
+          updateLoaderMessage("Error: Biblioteca Paho no cargada");
+          return;
+        }
+        
+        mqttClient = new Paho.MQTT.Client(
+          connectionConfigs[currentConfig].host, 
+          connectionConfigs[currentConfig].port, 
+          connectionConfigs[currentConfig].path, 
+          mqttClientId
+        );
+        
+        // Configurar callbacks
+        mqttClient.onConnectionLost = (responseObject) => {
+          logDebug(`Conexión MQTT perdida: ${responseObject.errorMessage || 'Desconocido'}`, 'error');
+          updateConnectionStatus(false, "Conexión perdida");
+        };
+        
+        mqttClient.onMessageArrived = (message) => {
+          const topic = message.destinationName;
+          const payload = message.payloadString;
+          logDebug(`Mensaje recibido - ${topic}: ${payload}`, 'success');
+          updateDashboard(topic, payload);
+          updateConnectionStatus(true, `Conectado a ${connectionConfigs[currentConfig].name}`);
+        };
+        
+        // Conectar
+        logDebug("Intentando conectar al broker...", 'info');
+        mqttClient.connect({
+          useSSL: connectionConfigs[currentConfig].secure,
+          timeout: 10,
+          onSuccess: () => {
+            logDebug(`Conexión MQTT establecida con ${connectionConfigs[currentConfig].name}`, 'success');
+            updateConnectionStatus(true, `Conectado`);
+            
+            // Suscribirse a todos los topics de tu ESP32
+            const topics = [
+              "horus/vvb/temperatura",
+              "horus/vvb/humedad",
+              "horus/vvb/presion",
+              "horus/vvb/altitud",
+              "horus/vvb/gas",
+              "horus/vvb/lluvia",
+              "horus/vvb/pm25",
+              "horus/vvb/pm10",
+              "horus/vvb/wind_direction",
+              "horus/vvb/wind_speed"
+            ];
+            
+            topics.forEach(topic => {
+              mqttClient.subscribe(topic, {
+                onSuccess: () => logDebug(`Suscrito a ${topic}`, 'success'),
+                onFailure: (error) => logDebug(`Error suscribiendo a ${topic}: ${error.errorMessage || error}`, 'error')
+              });
+            });
+          },
+          onFailure: (error) => {
+            logDebug(`Error al conectar: ${error.errorMessage || error}`, 'error');
+            updateLoaderMessage(`Error: ${error.errorMessage || 'Verifica tu configuración'}`);
+          }
+        });
+      } catch (error) {
+        logDebug(`Error crítico al intentar conectar: ${error.message}`, 'error');
+        updateLoaderMessage(`Error: ${error.message}<br>Verifica tu configuración`);
+      }
+    }
+    
+    // Actualizar el dashboard con los datos recibidos
+    function updateDashboard(topic, payload) {
+      if (topic === "horus/vvb/temperatura") {
+        document.getElementById('temp-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/humedad") {
+        document.getElementById('hum-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/presion") {
+        document.getElementById('press-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/altitud") {
+        document.getElementById('alt-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/gas") {
+        document.getElementById('gas-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/lluvia") {
+        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
+        document.getElementById('rain-value').setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
+      } else if (topic === "horus/vvb/pm25") {
+        document.getElementById('pm25-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/pm10") {
+        document.getElementById('pm10-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/wind_direction") {
+        document.getElementById('wind-value').setAttribute('text', `value: ${payload}`);
+      }
+    }
+    
+    // Configurar eventos
+    function setupEventListeners() {
+      // Panel de depuración
+      document.addEventListener('keydown', (e) => {
+        // Ctrl + Alt + D para mostrar/ocultar panel de depuración
+        if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'd') {
+          debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+        }
+      });
+      
+      // Botón para cerrar el panel de depuración
+      debugClose.addEventListener('click', () => {
+        debugPanel.style.display = 'none';
+      });
+      
+      // Botón de reconexión
+      reconnectButton.addEventListener('click', () => {
+        logDebug("Forzando reconexión...", 'info');
+        if (mqttClient && mqttConnected) {
+          logDebug("Desconectando cliente existente...", 'info');
+          mqttClient.disconnect();
+        }
+        connectToBroker();
+      });
+      
+      // Botón de prueba
+      testButton.addEventListener('click', () => {
+        if (mqttClient && mqttConnected) {
+          logDebug("Desconectando para realizar prueba limpia...", 'info');
+          mqttClient.disconnect();
+        }
+        testConnection();
+      });
+      
+      // Configuración de conexión
+      document.querySelectorAll('.config-option').forEach(option => {
+        option.addEventListener('click', () => {
+          // Actualizar clase activa
+          document.querySelectorAll('.config-option').forEach(opt => {
+            opt.classList.remove('active');
+          });
+          option.classList.add('active');
+          
+          // Actualizar configuración actual
+          currentConfig = option.getAttribute('data-config');
+          logDebug(`Configuración cambiada a: ${connectionConfigs[currentConfig].name}`, 'info');
+          logDebug(`Detalles: ${connectionConfigs[currentConfig].description}`, 'info');
+          
+          // Intentar conectar con la nueva configuración
+          if (mqttClient && mqttConnected) {
+            mqttClient.disconnect();
+          }
+          connectToBroker();
+        });
+      });
+    }
+    
+    // Inicializar la aplicación
+    window.addEventListener('load', () => {
+      // Inicializar panel de depuración
+      logDebug("Sistema de depuración inicializado", 'info');
+      logDebug("Presiona Ctrl + Alt + D para mostrar/ocultar el panel de depuración", 'info');
+      
+      // Verificar y esperar a que Paho esté listo
+      if (isPahoReady()) {
+        logDebug("Biblioteca Paho MQTT cargada correctamente", 'success');
+        setTimeout(() => {
+          logDebug("Iniciando conexión con configuración predeterminada...", 'info');
+          connectToBroker();
+        }, 1000);
+      } else {
+        logDebug("Biblioteca Paho MQTT no cargada, intentando cargar...", 'warning');
+        
+        // Intentar cargar Paho nuevamente si no está disponible
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js';
+        script.onload = function() {
+          logDebug("Biblioteca Paho MQTT cargada exitosamente", 'success');
+          setTimeout(() => {
+            logDebug("Iniciando conexión con configuración predeterminada...", 'info');
+            connectToBroker();
+          }, 1000);
+        };
+        script.onerror = function() {
+          logDebug("Error: No se pudo cargar la biblioteca MQTT", 'error');
+          updateLoaderMessage("Error: No se pudo cargar la biblioteca MQTT.<br>Verifica tu conexión a internet.");
+        };
+        document.head.appendChild(script);
+      }
+      
+      // Configurar eventos
+      setupEventListeners();
+    });
+  </script>
+</body>
+</html>
