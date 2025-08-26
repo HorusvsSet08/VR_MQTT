@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD CON DEPURACIÓN</title>
+  <title>HORUS STATION - DASHBOARD FUNCIONAL</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   
-  <!-- Cargar Paho MQTT con URL VERIFICADA y FUNCIONAL -->
+  <!-- Cargar Paho MQTT -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js"></script>
   
   <style>
     :root {
       --primary: #00eaff;
       --dark-bg: #000a1a;
-      --panel-bg: #0a1a30;
       --text: #e0e0e0;
       --text-secondary: #a0a0a0;
       --success: #4ade80;
@@ -83,117 +82,6 @@
       color: white;
       font-weight: 500;
       letter-spacing: 0.5px;
-    }
-    
-    /* Panel de depuración */
-    #debug-panel {
-      position: fixed;
-      top: 80px;
-      left: 15px;
-      right: 15px;
-      background: rgba(0, 10, 30, 0.85);
-      border-radius: 15px;
-      padding: 15px;
-      z-index: 1000;
-      max-height: 60vh;
-      overflow-y: auto;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 234, 255, 0.2);
-    }
-    
-    #debug-panel h3 {
-      color: var(--primary);
-      margin-top: 0;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    #debug-content {
-      font-family: monospace;
-      font-size: 13px;
-      line-height: 1.4;
-      color: #a0a0a0;
-      max-height: 40vh;
-      overflow-y: auto;
-      padding-right: 10px;
-    }
-    
-    .debug-entry {
-      margin-bottom: 5px;
-      padding-left: 10px;
-      border-left: 2px solid var(--primary);
-    }
-    
-    .debug-info {
-      color: #88ccff;
-    }
-    
-    .debug-error {
-      color: #ff8888;
-    }
-    
-    .debug-success {
-      color: #88ff88;
-    }
-    
-    .debug-button {
-      background: var(--primary);
-      color: #000;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-right: 10px;
-      margin-bottom: 10px;
-      transition: var(--transition);
-    }
-    
-    .debug-button:hover {
-      transform: scale(1.05);
-      box-shadow: var(--glow);
-    }
-    
-    .debug-button.test {
-      background: var(--warning);
-    }
-    
-    .debug-button.reconnect {
-      background: var(--success);
-    }
-    
-    .debug-button.close {
-      background: var(--danger);
-      float: right;
-      padding: 5px 10px;
-      font-size: 16px;
-    }
-    
-    .debug-config {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    
-    .config-option {
-      background: rgba(0, 100, 200, 0.2);
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .config-option:hover {
-      background: rgba(0, 100, 200, 0.4);
-    }
-    
-    .config-option.active {
-      background: var(--primary);
-      color: #000;
     }
     
     /* Estilo para el loader */
@@ -299,26 +187,6 @@
   <div id="connection-status">
     <span class="led" id="connection-led"></span>
     <span id="connection-text">Configurando...</span>
-  </div>
-  
-  <!-- Panel de depuración -->
-  <div id="debug-panel">
-    <h3>
-      Panel de Depuración
-      <button class="debug-button close" id="debug-close">✕</button>
-    </h3>
-    
-    <div class="debug-config">
-      <div class="config-option active" data-config="hivemq-8000">HiveMQ (8000/WSS)</div>
-      <div class="config-option" data-config="hivemq-8080">HiveMQ (8080/WS)</div>
-      <div class="config-option" data-config="eclipse">Eclipse (443/WSS)</div>
-      <div class="config-option" data-config="mosquitto">Mosquitto (8081/WSS)</div>
-    </div>
-    
-    <div id="debug-content"></div>
-    
-    <button class="debug-button reconnect" id="reconnect-button">Forzar Reconexión</button>
-    <button class="debug-button test" id="test-button">Probar Conexión</button>
   </div>
 
   <!-- Escena 3D -->
@@ -456,49 +324,21 @@
   <!-- Loader de conexión -->
   <div class="loader" id="loader">
     <div class="loader-spinner"></div>
-    <div class="loader-text" id="loader-text">Configurando tu broker MQTT...</div>
+    <div class="loader-text" id="loader-text">Conectando a Estación Horus...</div>
   </div>
 
   <script>
     // Variables globales
     let mqttClient;
     let mqttConnected = false;
-    let currentConfig = "hivemq-8000"; // Configuración por defecto
     
-    // CONFIGURACIONES DE CONEXIÓN PROBADAS
-    const connectionConfigs = {
-      "hivemq-8000": {
-        name: "HiveMQ (8000/WSS)",
-        host: "broker.hivemq.com",
-        port: 8000,
-        path: "/mqtt",
-        secure: true,
-        description: "Conexión WebSocket segura (recomendado para GitHub Pages)"
-      },
-      "hivemq-8080": {
-        name: "HiveMQ (8080/WS)",
-        host: "broker.hivemq.com",
-        port: 8080,
-        path: "/mqtt",
-        secure: false,
-        description: "Conexión WebSocket no segura (puede fallar en GitHub Pages)"
-      },
-      "eclipse": {
-        name: "Eclipse (443/WSS)",
-        host: "mqtt.eclipseprojects.io",
-        port: 443,
-        path: "/mqtt",
-        secure: true,
-        description: "Broker de respaldo (WSS)"
-      },
-      "mosquitto": {
-        name: "Mosquitto (8081/WSS)",
-        host: "test.mosquitto.org",
-        port: 8081,
-        path: "/mqtt",
-        secure: true,
-        description: "Broker de respaldo (WSS)"
-      }
+    // CONFIGURACIÓN CORRECTA PARA HIVE MQ
+    const mqttConfig = {
+      host: "broker.hivemq.com",
+      port: 8883,  // ¡PUERTO CORRECTO PARA WSS!
+      path: "/mqtt",
+      secure: true,
+      name: "HiveMQ (configuración correcta)"
     };
     
     // Elementos UI
@@ -506,34 +346,6 @@
     const connectionText = document.getElementById('connection-text');
     const loader = document.getElementById('loader');
     const loaderText = document.getElementById('loader-text');
-    const debugPanel = document.getElementById('debug-panel');
-    const debugContent = document.getElementById('debug-content');
-    const debugClose = document.getElementById('debug-close');
-    const reconnectButton = document.getElementById('reconnect-button');
-    const testButton = document.getElementById('test-button');
-    
-    // Función para agregar mensajes al panel de depuración
-    function logDebug(message, type = 'info') {
-      const entry = document.createElement('div');
-      entry.className = `debug-entry debug-${type}`;
-      
-      // Obtener hora actual
-      const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-      
-      entry.innerHTML = `<span style="color:#666">[${timeStr}]</span> ${message}`;
-      debugContent.appendChild(entry);
-      debugContent.scrollTop = debugContent.scrollHeight;
-      
-      // Registrar en la consola del navegador
-      if (type === 'error') {
-        console.error(`[DEBUG] ${message}`);
-      } else if (type === 'success') {
-        console.log(`[DEBUG] ${message}`);
-      } else {
-        console.log(`[DEBUG] ${message}`);
-      }
-    }
     
     // Actualizar estado de conexión
     function updateConnectionStatus(connected, message = "") {
@@ -569,124 +381,53 @@
              typeof Paho.MQTT.Client !== 'undefined';
     }
     
-    // Probar conexión con la configuración actual
-    function testConnection() {
-      logDebug(`Iniciando prueba de conexión con: ${connectionConfigs[currentConfig].name}`, 'info');
-      logDebug(`Detalles: ${connectionConfigs[currentConfig].description}`, 'info');
-      logDebug(`Configuración: ${connectionConfigs[currentConfig].host}:${connectionConfigs[currentConfig].port}${connectionConfigs[currentConfig].path}`, 'info');
-      
-      // Generar un ID único para el cliente
-      const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
-      
-      try {
-        // Crear cliente MQTT
-        logDebug(`Creando cliente MQTT con ID: ${mqttClientId}`, 'info');
-        
-        // Verificar si Paho está listo
-        if (!isPahoReady()) {
-          logDebug("ERROR: La biblioteca Paho MQTT no está cargada", 'error');
-          updateLoaderMessage("Error: Biblioteca Paho no cargada");
-          return;
-        }
-        
-        mqttClient = new Paho.MQTT.Client(
-          connectionConfigs[currentConfig].host, 
-          connectionConfigs[currentConfig].port, 
-          connectionConfigs[currentConfig].path, 
-          mqttClientId
-        );
-        
-        // Configurar callbacks
-        mqttClient.onConnectionLost = (responseObject) => {
-          logDebug(`Conexión perdida: ${responseObject.errorMessage || 'Desconocido'}`, 'error');
-          updateConnectionStatus(false, "Conexión perdida");
-        };
-        
-        mqttClient.onMessageArrived = (message) => {
-          logDebug(`Mensaje recibido: ${message.destinationName} = ${message.payloadString}`, 'success');
-        };
-        
-        // Intentar conectar
-        logDebug("Intentando conectar al broker...", 'info');
-        updateLoaderMessage(`Conectando a ${connectionConfigs[currentConfig].name}...`);
-        
-        const connectOptions = {
-          useSSL: connectionConfigs[currentConfig].secure,
-          timeout: 10,
-          onSuccess: () => {
-            logDebug("¡Conexión establecida con éxito!", 'success');
-            updateConnectionStatus(true, "Conectado");
-            
-            // Suscribirse a un topic de prueba
-            const testTopic = "horus/vvb/test";
-            logDebug(`Suscrito a topic de prueba: ${testTopic}`, 'info');
-            
-            mqttClient.subscribe(testTopic, {
-              onSuccess: () => logDebug(`Suscrito correctamente a ${testTopic}`, 'success'),
-              onFailure: (error) => logDebug(`Error al suscribirse: ${error.errorMessage || error}`, 'error')
-            });
-          },
-          onFailure: (error) => {
-            logDebug(`Error de conexión: ${error.errorMessage || error}`, 'error');
-            updateConnectionStatus(false, `Error: ${error.errorMessage || 'Verifica configuración'}`);
-          }
-        };
-        
-        mqttClient.connect(connectOptions);
-        
-      } catch (error) {
-        logDebug(`Error crítico al crear cliente: ${error.message}`, 'error');
-        updateLoaderMessage(`Error: ${error.message}<br>Verifica tu configuración`);
-      }
-    }
-    
-    // Conectar al broker con la configuración seleccionada
+    // Conectar al broker con la configuración correcta
     function connectToBroker() {
-      updateLoaderMessage(`Conectando a ${connectionConfigs[currentConfig].name}...`);
-      logDebug(`Iniciando conexión con: ${connectionConfigs[currentConfig].name}`, 'info');
+      updateLoaderMessage(`Conectando a ${mqttConfig.name}...`);
       
       // Generar un ID único para el cliente
       const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
       
       try {
         // Crear cliente MQTT
-        logDebug(`Creando cliente MQTT con ID: ${mqttClientId}`, 'info');
-        
-        // Verificar si Paho está listo
-        if (!isPahoReady()) {
-          logDebug("ERROR: La biblioteca Paho MQTT no está cargada", 'error');
-          updateLoaderMessage("Error: Biblioteca Paho no cargada");
-          return;
-        }
+        console.log(`Creando cliente MQTT con ID: ${mqttClientId}`);
+        console.log(`Conectando a: ${mqttConfig.host}:${mqttConfig.port}${mqttConfig.path}`);
         
         mqttClient = new Paho.MQTT.Client(
-          connectionConfigs[currentConfig].host, 
-          connectionConfigs[currentConfig].port, 
-          connectionConfigs[currentConfig].path, 
+          mqttConfig.host, 
+          mqttConfig.port, 
+          mqttConfig.path, 
           mqttClientId
         );
         
         // Configurar callbacks
         mqttClient.onConnectionLost = (responseObject) => {
-          logDebug(`Conexión MQTT perdida: ${responseObject.errorMessage || 'Desconocido'}`, 'error');
+          console.error(`Conexión MQTT perdida: ${responseObject.errorMessage || 'Desconocido'}`);
           updateConnectionStatus(false, "Conexión perdida");
+          
+          // Intentar reconectar después de 5 segundos
+          setTimeout(() => {
+            if (!mqttConnected) {
+              connectToBroker();
+            }
+          }, 5000);
         };
         
         mqttClient.onMessageArrived = (message) => {
           const topic = message.destinationName;
           const payload = message.payloadString;
-          logDebug(`Mensaje recibido - ${topic}: ${payload}`, 'success');
+          console.log(`Mensaje recibido - ${topic}: ${payload}`);
           updateDashboard(topic, payload);
-          updateConnectionStatus(true, `Conectado a ${connectionConfigs[currentConfig].name}`);
+          updateConnectionStatus(true, `Conectado a ${mqttConfig.name}`);
         };
         
         // Conectar
-        logDebug("Intentando conectar al broker...", 'info');
+        console.log("Intentando conectar al broker...");
         mqttClient.connect({
-          useSSL: connectionConfigs[currentConfig].secure,
+          useSSL: mqttConfig.secure,
           timeout: 10,
           onSuccess: () => {
-            logDebug(`Conexión MQTT establecida con ${connectionConfigs[currentConfig].name}`, 'success');
+            console.log(`Conexión MQTT establecida con ${mqttConfig.name}`);
             updateConnectionStatus(true, `Conectado`);
             
             // Suscribirse a todos los topics de tu ESP32
@@ -705,19 +446,114 @@
             
             topics.forEach(topic => {
               mqttClient.subscribe(topic, {
-                onSuccess: () => logDebug(`Suscrito a ${topic}`, 'success'),
-                onFailure: (error) => logDebug(`Error suscribiendo a ${topic}: ${error.errorMessage || error}`, 'error')
+                onSuccess: () => console.log(`Suscrito a ${topic}`),
+                onFailure: (error) => console.error(`Error suscribiendo a ${topic}: ${error.errorMessage || error}`)
               });
             });
           },
           onFailure: (error) => {
-            logDebug(`Error al conectar: ${error.errorMessage || error}`, 'error');
-            updateLoaderMessage(`Error: ${error.errorMessage || 'Verifica tu configuración'}`);
+            console.error(`Error al conectar: ${error.errorMessage || error}`);
+            
+            // Intentar con alternativa
+            console.log("Intentando con broker alternativo Mosquitto...");
+            connectToMosquitto();
           }
         });
       } catch (error) {
-        logDebug(`Error crítico al intentar conectar: ${error.message}`, 'error');
+        console.error(`Error crítico al intentar conectar: ${error.message}`);
         updateLoaderMessage(`Error: ${error.message}<br>Verifica tu configuración`);
+        
+        // Intentar con alternativa
+        setTimeout(connectToMosquitto, 2000);
+      }
+    }
+    
+    // Conectar al broker Mosquitto como alternativa
+    function connectToMosquitto() {
+      updateLoaderMessage("Intentando con broker alternativo...");
+      
+      const mosquittoConfig = {
+        host: "test.mosquitto.org",
+        port: 8081,
+        path: "/mqtt",
+        secure: true,
+        name: "Mosquitto (alternativa)"
+      };
+      
+      // Generar un ID único para el cliente
+      const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
+      
+      try {
+        // Crear cliente MQTT
+        console.log(`Creando cliente MQTT con ID: ${mqttClientId}`);
+        console.log(`Conectando a: ${mosquittoConfig.host}:${mosquittoConfig.port}${mosquittoConfig.path}`);
+        
+        mqttClient = new Paho.MQTT.Client(
+          mosquittoConfig.host, 
+          mosquittoConfig.port, 
+          mosquittoConfig.path, 
+          mqttClientId
+        );
+        
+        // Configurar callbacks
+        mqttClient.onConnectionLost = (responseObject) => {
+          console.error(`Conexión MQTT perdida: ${responseObject.errorMessage || 'Desconocido'}`);
+          updateConnectionStatus(false, "Conexión perdida");
+          
+          // Intentar reconectar después de 5 segundos
+          setTimeout(() => {
+            if (!mqttConnected) {
+              connectToMosquitto();
+            }
+          }, 5000);
+        };
+        
+        mqttClient.onMessageArrived = (message) => {
+          const topic = message.destinationName;
+          const payload = message.payloadString;
+          console.log(`Mensaje recibido - ${topic}: ${payload}`);
+          updateDashboard(topic, payload);
+          updateConnectionStatus(true, `Conectado a ${mosquittoConfig.name}`);
+        };
+        
+        // Conectar
+        console.log("Intentando conectar al broker Mosquitto...");
+        mqttClient.connect({
+          useSSL: mosquittoConfig.secure,
+          timeout: 10,
+          onSuccess: () => {
+            console.log(`Conexión MQTT establecida con ${mosquittoConfig.name}`);
+            updateConnectionStatus(true, `Conectado`);
+            
+            // Suscribirse a todos los topics
+            const topics = [
+              "horus/vvb/temperatura",
+              "horus/vvb/humedad",
+              "horus/vvb/presion",
+              "horus/vvb/altitud",
+              "horus/vvb/gas",
+              "horus/vvb/lluvia",
+              "horus/vvb/pm25",
+              "horus/vvb/pm10",
+              "horus/vvb/wind_direction",
+              "horus/vvb/wind_speed"
+            ];
+            
+            topics.forEach(topic => {
+              mqttClient.subscribe(topic, {
+                onSuccess: () => console.log(`Suscrito a ${topic}`),
+                onFailure: (error) => console.error(`Error suscribiendo a ${topic}: ${error.errorMessage || error}`)
+              });
+            });
+          },
+          onFailure: (error) => {
+            console.error(`Error al conectar a Mosquitto: ${error.errorMessage || error}`);
+            updateLoaderMessage("Error: No se pudo conectar al broker MQTT.<br>Verifica tu conexión a internet");
+          }
+        });
+      } catch (error) {
+        console.error(`Error crítico al intentar conectar a Mosquitto: ${error.message}`);
+        updateLoaderMessage("Error: No se pudo conectar al broker MQTT.<br>Verifica tu conexión a internet");
       }
     }
     
@@ -745,98 +581,28 @@
       }
     }
     
-    // Configurar eventos
-    function setupEventListeners() {
-      // Panel de depuración
-      document.addEventListener('keydown', (e) => {
-        // Ctrl + Alt + D para mostrar/ocultar panel de depuración
-        if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'd') {
-          debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-        }
-      });
-      
-      // Botón para cerrar el panel de depuración
-      debugClose.addEventListener('click', () => {
-        debugPanel.style.display = 'none';
-      });
-      
-      // Botón de reconexión
-      reconnectButton.addEventListener('click', () => {
-        logDebug("Forzando reconexión...", 'info');
-        if (mqttClient && mqttConnected) {
-          logDebug("Desconectando cliente existente...", 'info');
-          mqttClient.disconnect();
-        }
-        connectToBroker();
-      });
-      
-      // Botón de prueba
-      testButton.addEventListener('click', () => {
-        if (mqttClient && mqttConnected) {
-          logDebug("Desconectando para realizar prueba limpia...", 'info');
-          mqttClient.disconnect();
-        }
-        testConnection();
-      });
-      
-      // Configuración de conexión
-      document.querySelectorAll('.config-option').forEach(option => {
-        option.addEventListener('click', () => {
-          // Actualizar clase activa
-          document.querySelectorAll('.config-option').forEach(opt => {
-            opt.classList.remove('active');
-          });
-          option.classList.add('active');
-          
-          // Actualizar configuración actual
-          currentConfig = option.getAttribute('data-config');
-          logDebug(`Configuración cambiada a: ${connectionConfigs[currentConfig].name}`, 'info');
-          logDebug(`Detalles: ${connectionConfigs[currentConfig].description}`, 'info');
-          
-          // Intentar conectar con la nueva configuración
-          if (mqttClient && mqttConnected) {
-            mqttClient.disconnect();
-          }
-          connectToBroker();
-        });
-      });
-    }
-    
     // Inicializar la aplicación
     window.addEventListener('load', () => {
-      // Inicializar panel de depuración
-      logDebug("Sistema de depuración inicializado", 'info');
-      logDebug("Presiona Ctrl + Alt + D para mostrar/ocultar el panel de depuración", 'info');
-      
       // Verificar y esperar a que Paho esté listo
       if (isPahoReady()) {
-        logDebug("Biblioteca Paho MQTT cargada correctamente", 'success');
-        setTimeout(() => {
-          logDebug("Iniciando conexión con configuración predeterminada...", 'info');
-          connectToBroker();
-        }, 1000);
+        console.log("Biblioteca Paho MQTT cargada correctamente");
+        connectToBroker();
       } else {
-        logDebug("Biblioteca Paho MQTT no cargada, intentando cargar...", 'warning');
+        console.log("Biblioteca Paho MQTT no cargada, intentando cargar...");
         
         // Intentar cargar Paho nuevamente si no está disponible
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js';
         script.onload = function() {
-          logDebug("Biblioteca Paho MQTT cargada exitosamente", 'success');
-          setTimeout(() => {
-            logDebug("Iniciando conexión con configuración predeterminada...", 'info');
-            connectToBroker();
-          }, 1000);
+          console.log("Biblioteca Paho MQTT cargada exitosamente");
+          connectToBroker();
         };
         script.onerror = function() {
-          logDebug("Error: No se pudo cargar la biblioteca MQTT", 'error');
+          console.error("Error: No se pudo cargar la biblioteca MQTT");
           updateLoaderMessage("Error: No se pudo cargar la biblioteca MQTT.<br>Verifica tu conexión a internet.");
         };
         document.head.appendChild(script);
       }
-      
-      // Configurar eventos
-      setupEventListeners();
     });
   </script>
 </body>
