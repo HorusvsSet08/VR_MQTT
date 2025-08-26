@@ -704,8 +704,8 @@
               material="color: #003366; transparent: true; opacity: 0.1">
     </a-entity>
     
-    <!-- Panel de datos - POSICION CORREGIDA (NO ESTÁ METIDO EN EL SUELO) -->
-    <a-entity id="dashboard" position="0 1.2 -1.5" class="dashboard-glow">
+    <!-- Panel de datos - POSICION ALEJADA (NO ESTÁ METIDO EN EL SUELO) -->
+    <a-entity id="dashboard" position="0 1.2 -2.0" class="dashboard-glow">
       <a-plane width="6" height="3.5" color="#0a1a30" opacity="0.9" transparent="true" radius="0.2"></a-plane>
       <a-plane width="5.8" height="3.3" color="#000f2a" opacity="0.95" transparent="true" position="0 0 0.01"></a-plane>
       
@@ -919,10 +919,10 @@
       
       if (isVRMode) {
         // Posición para VR - más cerca y ligeramente más bajo
-        dashboard.setAttribute('position', '0 1.2 -1.0');
+        dashboard.setAttribute('position', '0 1.2 -1.5');
       } else {
         // Posición para 3D normal - ¡CORREGIDA! No está metido en el suelo
-        dashboard.setAttribute('position', '0 1.2 -1.5');
+        dashboard.setAttribute('position', '0 1.2 -2.0');
       }
     }
     
