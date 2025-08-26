@@ -128,8 +128,8 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      display: none;
       z-index: 1000;
+      display: none;
     }
     
     #vr-button {
@@ -173,14 +173,67 @@
       box-shadow: var(--glow);
     }
     
-    #joystick-container {
+    /* BARRA IZQUIERDA - NUEVO */
+    #left-bar {
       position: fixed;
-      left: 20px;
-      bottom: 20px;
-      width: 100px;
-      height: 100px;
-      z-index: 999;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 60px;
+      height: 200px;
+      background: rgba(0, 10, 30, 0.7);
+      border-radius: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 234, 255, 0.2);
       display: none;
+    }
+    
+    .control-icon {
+      font-size: 24px;
+      color: var(--primary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .control-icon:hover {
+      transform: scale(1.2);
+      color: white;
+    }
+    
+    /* BARRA INFERIOR - NUEVO */
+    #bottom-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 250px;
+      height: 60px;
+      background: rgba(0, 10, 30, 0.7);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 234, 255, 0.2);
+      display: none;
+    }
+    
+    .mode-icon {
+      font-size: 28px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .mode-icon.active {
+      color: var(--primary);
+      transform: scale(1.1);
     }
     
     /* Selector de modo para móviles */
@@ -391,8 +444,8 @@
         font-size: 14px;
       }
       
-      #joystick-container, #vr-button {
-        display: block;
+      #left-bar, #bottom-bar {
+        display: flex;
       }
     }
     
@@ -511,6 +564,16 @@
     }
     
     /* Estilo para el joystick */
+    #joystick-container {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      width: 100px;
+      height: 100px;
+      z-index: 999;
+      display: none;
+    }
+    
     .nipple {
       position: absolute;
       width: 45px;
@@ -579,6 +642,21 @@
     </div>
   </div>
   
+  <!-- BARRA IZQUIERDA NUEVA - Para controlar la vista -->
+  <div id="left-bar" class="mobile-only">
+    <div class="control-icon" id="zoom-in">🔍+</div>
+    <div class="control-icon" id="reset-view">🔄</div>
+    <div class="control-icon" id="zoom-out">🔍-</div>
+  </div>
+  
+  <!-- BARRA INFERIOR NUEVA - Para otros controles -->
+  <div id="bottom-bar" class="mobile-only">
+    <div class="mode-icon active" id="mode-3d-mobile">📊</div>
+    <div class="mode-icon" id="mode-vr-mobile">🕶️</div>
+    <div class="mode-icon" id="mode-ar-mobile">📱</div>
+    <div class="mode-icon" id="settings">⚙️</div>
+  </div>
+  
   <!-- Controles móviles -->
   <div id="joystick-container" class="mobile-only"></div>
   <div id="mobile-controls" class="mobile-only">
@@ -587,7 +665,7 @@
   
   <!-- Escena 3D -->
   <a-scene id="main-scene" embedded style="width: 100%; height: 100vh;" vr-mode-ui="enabled: false">
-    <a-entity id="camera-rig" position="0 1.6 4">
+    <a-entity id="camera-rig" position="0 1.6 0">
       <a-entity id="camera" camera look-controls>
         <a-cursor 
           raycaster="objects: .sensor-card" 
@@ -610,8 +688,8 @@
               material="color: #003366; transparent: true; opacity: 0.1">
     </a-entity>
     
-    <!-- Panel de datos -->
-    <a-entity id="dashboard" position="0 1.8 -4" class="dashboard-glow">
+    <!-- Panel de datos - POSICION CORREGIDA PARA TODOS LOS DISPOSITIVOS -->
+    <a-entity id="dashboard" position="0 1.2 -2.2" class="dashboard-glow">
       <a-plane width="6" height="3.5" color="#0a1a30" opacity="0.9" transparent="true" radius="0.2"></a-plane>
       <a-plane width="5.8" height="3.3" color="#000f2a" opacity="0.95" transparent="true" position="0 0 0.01"></a-plane>
       
@@ -722,6 +800,7 @@
     let connectionAttempts = 0;
     let maxAttempts = 5;
     let currentBrokerIndex = 0;
+    let isVRMode = false;
     
     // Lista de brokers MQTT de respaldo
     const mqttBrokers = [
@@ -785,6 +864,19 @@
       }
     }
     
+    // Ajustar posición del panel según el modo
+    function adjustDashboardPosition() {
+      const dashboard = document.getElementById('dashboard');
+      
+      if (isVRMode) {
+        // Posición para VR - más cerca y ligeramente más bajo
+        dashboard.setAttribute('position', '0 1.2 -1.5');
+      } else {
+        // Posición para 3D normal - ajustada para mejor visibilidad en escritorio
+        dashboard.setAttribute('position', '0 1.2 -2.2');
+      }
+    }
+    
     // Intentar conectar al broker actual
     function tryConnectToCurrentBroker() {
       if (currentBrokerIndex >= mqttBrokers.length) {
@@ -812,297 +904,4 @@
         mqttClient.onConnectionLost = (responseObject) => {
           console.log(`Conexión MQTT perdida con ${broker.name}:`, responseObject.errorMessage);
           
-          // Intentar con el siguiente broker
-          currentBrokerIndex++;
-          setTimeout(tryConnectToCurrentBroker, 2000);
-        };
-        
-        mqttClient.onMessageArrived = (message) => {
-          const topic = message.destinationName;
-          const payload = message.payloadString;
-          console.log(`Mensaje recibido - ${topic}: ${payload}`);
-          updateDashboard(topic, payload);
-          updateConnectionStatus(true, `Conectado a ${broker.name}`);
-        };
-        
-        // Conectar
-        mqttClient.connect({
-          useSSL: broker.secure,
-          timeout: 5,
-          onSuccess: () => {
-            console.log(`Conexión MQTT establecida con ${broker.name}`);
-            updateConnectionStatus(true, `Conectado a ${broker.name}`);
-            
-            // Suscribirse a los temas
-            const topics = [
-              "horus/vvb/temperatura",
-              "horus/vvb/humedad",
-              "horus/vvb/presion",
-              "horus/vvb/altitud",
-              "horus/vvb/gas",
-              "horus/vvb/lluvia"
-            ];
-            
-            topics.forEach(topic => {
-              mqttClient.subscribe(topic, {
-                onSuccess: () => console.log(`Suscrito a ${topic}`),
-                onFailure: (error) => console.error(`Error suscribiendo a ${topic}:`, error)
-              });
-            });
-          },
-          onFailure: (error) => {
-            console.error(`Error al conectar a ${broker.name}:`, error.errorMessage || error);
-            
-            // Intentar con el siguiente broker
-            currentBrokerIndex++;
-            setTimeout(tryConnectToCurrentBroker, 2000);
-          }
-        });
-      } catch (error) {
-        console.error(`Error crítico al intentar conectar a ${broker.name}:`, error);
-        
-        // Intentar con el siguiente broker
-        currentBrokerIndex++;
-        setTimeout(tryConnectToCurrentBroker, 2000);
-      }
-    }
-    
-    // Inicializar conexión MQTT con múltiples brokers de respaldo
-    function initMQTT() {
-      if (!isPahoReady()) {
-        updateLoaderMessage("Esperando a que Paho MQTT se cargue...");
-        setTimeout(initMQTT, 500);
-        return;
-      }
-      
-      updateLoaderMessage("Iniciando conexión a brokers MQTT...");
-      currentBrokerIndex = 0;
-      connectionAttempts = 0;
-      tryConnectToCurrentBroker();
-    }
-    
-    // Actualizar el dashboard con los datos recibidos
-    function updateDashboard(topic, payload) {
-      if (topic === "horus/vvb/temperatura") {
-        const temp = parseFloat(payload);
-        document.getElementById('temp-value').setAttribute('text', `value: ${temp.toFixed(1)}`);
-        
-        // Efectos visuales según el valor
-        const tempElement = document.getElementById('temp-value').parentNode;
-        if (temp > 30) {
-          tempElement.setAttribute('color', '#ff4d4d');
-          tempElement.classList.add('value-danger');
-        } else if (temp > 25) {
-          tempElement.setAttribute('color', '#ffcc00');
-          tempElement.classList.add('value-warning');
-        } else {
-          tempElement.setAttribute('color', '#FF5722');
-          tempElement.classList.remove('value-warning', 'value-danger');
-        }
-      } else if (topic === "horus/vvb/humedad") {
-        const hum = parseFloat(payload);
-        document.getElementById('hum-value').setAttribute('text', `value: ${hum.toFixed(1)}`);
-        
-        // Efectos visuales según el valor
-        const humElement = document.getElementById('hum-value').parentNode;
-        if (hum > 80) {
-          humElement.setAttribute('color', '#ff4d4d');
-          humElement.classList.add('value-danger');
-        } else if (hum > 60) {
-          humElement.setAttribute('color', '#ffcc00');
-          humElement.classList.add('value-warning');
-        } else {
-          humElement.setAttribute('color', '#2196F3');
-          humElement.classList.remove('value-warning', 'value-danger');
-        }
-      } else if (topic === "horus/vvb/presion") {
-        document.getElementById('press-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/altitud") {
-        document.getElementById('alt-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/gas") {
-        // Escala lógica para el sensor MQ-2
-        const gasValue = parseFloat(payload);
-        const percent = gasValue ? Math.min(100, gasValue / 10).toFixed(1) : 0;
-        document.getElementById('gas-value').setAttribute('text', `value: ${percent}`);
-        
-        // Efectos visuales según el valor
-        const gasElement = document.getElementById('gas-value').parentNode;
-        if (percent > 50) {
-          gasElement.setAttribute('color', '#ff4d4d');
-          gasElement.classList.add('value-danger');
-        } else if (percent > 20) {
-          gasElement.setAttribute('color', '#ffcc00');
-          gasElement.classList.add('value-warning');
-        } else {
-          gasElement.setAttribute('color', '#FFEB3B');
-          gasElement.classList.remove('value-warning', 'value-danger');
-        }
-      } else if (topic === "horus/vvb/lluvia") {
-        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
-        document.getElementById('rain-value').setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
-        
-        // Efectos visuales según el valor
-        const rainElement = document.getElementById('rain-value').parentNode;
-        if (raining) {
-          rainElement.setAttribute('color', '#4ade80');
-        } else {
-          rainElement.setAttribute('color', '#2196F3');
-        }
-      }
-    }
-    
-    // Inicializar el joystick para móviles
-    function initJoystick() {
-      if (!isMobile) return;
-      
-      // Obtener referencias a la cámara
-      cameraRig = document.getElementById('camera-rig');
-      camera = document.getElementById('camera');
-      
-      if (!cameraRig || !camera) {
-        console.error("No se encontraron elementos de cámara");
-        return;
-      }
-      
-      // Configurar el joystick
-      const joystick = nipplejs.create({
-        zone: document.getElementById('joystick-container'),
-        size: 100,
-        threshold: 0.1,
-        color: 'rgba(0, 234, 255, 0.7)',
-        fadeTime: 250
-      });
-      
-      // Manejar el movimiento
-      joystick.on('move', (evt, data) => {
-        if (!cameraRig || !camera) return;
-        
-        const angle = data.angle.radian;
-        const force = data.force;
-        
-        // Calcular movimiento
-        const moveSpeed = 0.05 * force;
-        const dx = Math.sin(angle) * moveSpeed;
-        const dz = Math.cos(angle) * moveSpeed;
-        
-        // Actualizar posición
-        const currentPos = cameraRig.getAttribute('position');
-        cameraRig.setAttribute('position', {
-          x: currentPos.x - dx,
-          y: currentPos.y,
-          z: currentPos.z - dz
-        });
-        
-        // Actualizar dirección de la cámara
-        if (force > 0.1) {
-          camera.setAttribute('rotation', {
-            x: 0,
-            y: (angle * (180 / Math.PI) - 90) % 360,
-            z: 0
-          });
-        }
-      });
-      
-      // Detener movimiento cuando se suelta
-      joystick.on('end', () => {
-        if (camera && cameraRig) {
-          camera.setAttribute('rotation', { x: 0, y: 0, z: 0 });
-        }
-      });
-    }
-    
-    // Cambiar a modo VR
-    function enterVRMode() {
-      const scene = document.querySelector('a-scene');
-      if (scene && scene.enterVR) {
-        scene.enterVR();
-      }
-    }
-    
-    // Configurar eventos
-    function setupEventListeners() {
-      // Botón de VR
-      document.getElementById('vr-button').addEventListener('click', enterVRMode);
-      
-      // Selector de modo móvil
-      document.getElementById('3d-mode-btn').addEventListener('click', () => {
-        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('3d-mode-btn').classList.add('active');
-        currentMode = '3d';
-      });
-      
-      document.getElementById('vr-mode-btn').addEventListener('click', () => {
-        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('vr-mode-btn').classList.add('active');
-        currentMode = 'vr';
-        enterVRMode();
-      });
-      
-      // Controles de escritorio
-      document.getElementById('mode-3d').addEventListener('click', () => {
-        currentMode = '3d';
-      });
-      
-      document.getElementById('mode-vr').addEventListener('click', () => {
-        currentMode = 'vr';
-        enterVRMode();
-      });
-    }
-    
-    // Inicializar la aplicación
-    window.addEventListener('load', () => {
-      // Crear partículas de fondo
-      const particlesContainer = document.getElementById('particles');
-      const particleCount = isMobile ? 30 : 60;
-      
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        
-        // Propiedades aleatorias
-        const size = Math.random() * 3 + 1;
-        const posX = Math.random() * 100;
-        const posY = Math.random() * 100;
-        const delay = Math.random() * 15;
-        const duration = Math.random() * 10 + 10;
-        
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        particle.style.left = `${posX}%`;
-        particle.style.top = `${posY}%`;
-        particle.style.animationDelay = `${delay}s`;
-        particle.style.animationDuration = `${duration}s`;
-        
-        particlesContainer.appendChild(particle);
-      }
-      
-      // Configurar interfaz para móviles
-      if (isMobile) {
-        document.getElementById('mobile-mode-selector').style.display = 'block';
-      }
-      
-      // Inicializar elementos
-      setupEventListeners();
-      initJoystick();
-      
-      // Verificar y esperar a que Paho esté listo
-      if (isPahoReady()) {
-        initMQTT();
-      } else {
-        // Intentar cargar Paho nuevamente si no está disponible
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js';
-        script.onload = function() {
-          console.log("Biblioteca Paho MQTT recargada");
-          initMQTT();
-        };
-        script.onerror = function() {
-          updateLoaderMessage("Error: No se pudo cargar la biblioteca MQTT.<br>Verifica tu conexión a internet.");
-          console.error("No se pudo cargar la biblioteca Paho MQTT");
-        };
-        document.head.appendChild(script);
-      }
-    });
-  </script>
-</body>
-</html>
+          // Intentar con el siguie
