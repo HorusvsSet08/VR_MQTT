@@ -798,32 +798,35 @@
     let mqttConnected = false;
     let cameraRig, camera;
     let connectionAttempts = 0;
-    let maxAttempts = 5;
+    let maxAttempts = 10;
     let currentBrokerIndex = 0;
     let isVRMode = false;
     
-    // Lista de brokers MQTT de respaldo
+    // Lista de brokers MQTT de respaldo - ORDENADA POR CONFIABILIDAD CON GITHUB PAGES
     const mqttBrokers = [
-      {
-        host: "broker.hivemq.com",
-        port: 8884,
-        path: "/mqtt",
-        secure: true,
-        name: "HiveMQ"
-      },
       {
         host: "test.mosquitto.org",
         port: 8081,
         path: "/mqtt",
         secure: true,
-        name: "Mosquitto"
+        name: "Mosquitto (mejor para GitHub Pages)",
+        timeout: 10
       },
       {
         host: "mqtt.eclipseprojects.io",
         port: 443,
         path: "/mqtt",
         secure: true,
-        name: "Eclipse"
+        name: "Eclipse",
+        timeout: 8
+      },
+      {
+        host: "broker.hivemq.com",
+        port: 8884,
+        path: "/mqtt",
+        secure: true,
+        name: "HiveMQ",
+        timeout: 8
       }
     ];
     
@@ -877,7 +880,7 @@
       }
     }
     
-    // Intentar conectar al broker actual
+    // Intentar conectar al broker actual con retroceso exponencial
     function tryConnectToCurrentBroker() {
       if (currentBrokerIndex >= mqttBrokers.length) {
         currentBrokerIndex = 0;
@@ -904,4 +907,346 @@
         mqttClient.onConnectionLost = (responseObject) => {
           console.log(`Conexión MQTT perdida con ${broker.name}:`, responseObject.errorMessage);
           
-          // Intentar con el siguie
+          // Intentar con el siguiente broker
+          currentBrokerIndex++;
+          const delay = Math.min(3000, 500 * Math.pow(2, connectionAttempts));
+          setTimeout(tryConnectToCurrentBroker, delay);
+        };
+        
+        mqttClient.onMessageArrived = (message) => {
+          const topic = message.destinationName;
+          const payload = message.payloadString;
+          console.log(`Mensaje recibido - ${topic}: ${payload}`);
+          updateDashboard(topic, payload);
+          updateConnectionStatus(true, `Conectado a ${broker.name}`);
+        };
+        
+        // Conectar con tiempo de espera ajustado
+        mqttClient.connect({
+          useSSL: broker.secure,
+          timeout: broker.timeout,
+          onSuccess: () => {
+            console.log(`Conexión MQTT establecida con ${broker.name}`);
+            updateConnectionStatus(true, `Conectado a ${broker.name}`);
+            
+            // Suscribirse a los temas
+            const topics = [
+              "horus/vvb/temperatura",
+              "horus/vvb/humedad",
+              "horus/vvb/presion",
+              "horus/vvb/altitud",
+              "horus/vvb/gas",
+              "horus/vvb/lluvia"
+            ];
+            
+            topics.forEach(topic => {
+              mqttClient.subscribe(topic, {
+                onSuccess: () => console.log(`Suscrito a ${topic}`),
+                onFailure: (error) => console.error(`Error suscribiendo a ${topic}:`, error)
+              });
+            });
+          },
+          onFailure: (error) => {
+            console.error(`Error al conectar a ${broker.name}:`, error.errorMessage || error);
+            
+            // Intentar con el siguiente broker
+            currentBrokerIndex++;
+            const delay = Math.min(3000, 500 * Math.pow(2, connectionAttempts));
+            setTimeout(tryConnectToCurrentBroker, delay);
+          }
+        });
+      } catch (error) {
+        console.error(`Error crítico al intentar conectar a ${broker.name}:`, error);
+        
+        // Intentar con el siguiente broker
+        currentBrokerIndex++;
+        const delay = Math.min(3000, 500 * Math.pow(2, connectionAttempts));
+        setTimeout(tryConnectToCurrentBroker, delay);
+      }
+    }
+    
+    // Inicializar conexión MQTT con múltiples brokers de respaldo
+    function initMQTT() {
+      if (!isPahoReady()) {
+        updateLoaderMessage("Esperando a que Paho MQTT se cargue...");
+        setTimeout(initMQTT, 500);
+        return;
+      }
+      
+      updateLoaderMessage("Iniciando conexión a brokers MQTT...");
+      currentBrokerIndex = 0;
+      connectionAttempts = 0;
+      tryConnectToCurrentBroker();
+    }
+    
+    // Actualizar el dashboard con los datos recibidos
+    function updateDashboard(topic, payload) {
+      if (topic === "horus/vvb/temperatura") {
+        const temp = parseFloat(payload);
+        document.getElementById('temp-value').setAttribute('text', `value: ${temp.toFixed(1)}`);
+        
+        // Efectos visuales según el valor
+        const tempElement = document.getElementById('temp-value').parentNode;
+        if (temp > 30) {
+          tempElement.setAttribute('color', '#ff4d4d');
+          tempElement.classList.add('value-danger');
+        } else if (temp > 25) {
+          tempElement.setAttribute('color', '#ffcc00');
+          tempElement.classList.add('value-warning');
+        } else {
+          tempElement.setAttribute('color', '#FF5722');
+          tempElement.classList.remove('value-warning', 'value-danger');
+        }
+      } else if (topic === "horus/vvb/humedad") {
+        const hum = parseFloat(payload);
+        document.getElementById('hum-value').setAttribute('text', `value: ${hum.toFixed(1)}`);
+        
+        // Efectos visuales según el valor
+        const humElement = document.getElementById('hum-value').parentNode;
+        if (hum > 80) {
+          humElement.setAttribute('color', '#ff4d4d');
+          humElement.classList.add('value-danger');
+        } else if (hum > 60) {
+          humElement.setAttribute('color', '#ffcc00');
+          humElement.classList.add('value-warning');
+        } else {
+          humElement.setAttribute('color', '#2196F3');
+          humElement.classList.remove('value-warning', 'value-danger');
+        }
+      } else if (topic === "horus/vvb/presion") {
+        document.getElementById('press-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/altitud") {
+        document.getElementById('alt-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/gas") {
+        // Escala lógica para el sensor MQ-2
+        const gasValue = parseFloat(payload);
+        const percent = gasValue ? Math.min(100, gasValue / 10).toFixed(1) : 0;
+        document.getElementById('gas-value').setAttribute('text', `value: ${percent}`);
+        
+        // Efectos visuales según el valor
+        const gasElement = document.getElementById('gas-value').parentNode;
+        if (percent > 50) {
+          gasElement.setAttribute('color', '#ff4d4d');
+          gasElement.classList.add('value-danger');
+        } else if (percent > 20) {
+          gasElement.setAttribute('color', '#ffcc00');
+          gasElement.classList.add('value-warning');
+        } else {
+          gasElement.setAttribute('color', '#FFEB3B');
+          gasElement.classList.remove('value-warning', 'value-danger');
+        }
+      } else if (topic === "horus/vvb/lluvia") {
+        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
+        document.getElementById('rain-value').setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
+        
+        // Efectos visuales según el valor
+        const rainElement = document.getElementById('rain-value').parentNode;
+        if (raining) {
+          rainElement.setAttribute('color', '#4ade80');
+        } else {
+          rainElement.setAttribute('color', '#2196F3');
+        }
+      }
+    }
+    
+    // Inicializar el joystick para móviles
+    function initJoystick() {
+      if (!isMobile) return;
+      
+      // Obtener referencias a la cámara
+      cameraRig = document.getElementById('camera-rig');
+      camera = document.getElementById('camera');
+      
+      if (!cameraRig || !camera) {
+        console.error("No se encontraron elementos de cámara");
+        return;
+      }
+      
+      // Configurar el joystick
+      const joystick = nipplejs.create({
+        zone: document.getElementById('joystick-container'),
+        size: 100,
+        threshold: 0.1,
+        color: 'rgba(0, 234, 255, 0.7)',
+        fadeTime: 250
+      });
+      
+      // Manejar el movimiento
+      joystick.on('move', (evt, data) => {
+        if (!cameraRig || !camera) return;
+        
+        const angle = data.angle.radian;
+        const force = data.force;
+        
+        // Calcular movimiento - AJUSTE DE SENSIBILIDAD
+        const moveSpeed = 0.03 * force; // Reducido para mejor control
+        const dx = Math.sin(angle) * moveSpeed;
+        const dz = Math.cos(angle) * moveSpeed;
+        
+        // Actualizar posición
+        const currentPos = cameraRig.getAttribute('position');
+        cameraRig.setAttribute('position', {
+          x: currentPos.x - dx,
+          y: currentPos.y,
+          z: currentPos.z - dz
+        });
+        
+        // Actualizar dirección de la cámara
+        if (force > 0.1) {
+          camera.setAttribute('rotation', {
+            x: 0,
+            y: (angle * (180 / Math.PI) - 90) % 360,
+            z: 0
+          });
+        }
+      });
+      
+      // Detener movimiento cuando se suelta
+      joystick.on('end', () => {
+        if (camera && cameraRig) {
+          camera.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+        }
+      });
+    }
+    
+    // Configurar controles adicionales para móviles
+    function setupMobileControls() {
+      if (!isMobile) return;
+      
+      // Botones de la barra izquierda
+      document.getElementById('zoom-in').addEventListener('click', () => {
+        const currentPos = cameraRig.getAttribute('position');
+        cameraRig.setAttribute('position', {
+          x: currentPos.x,
+          y: currentPos.y,
+          z: currentPos.z + 0.3
+        });
+      });
+      
+      document.getElementById('reset-view').addEventListener('click', () => {
+        cameraRig.setAttribute('position', { x: 0, y: 1.6, z: 0 });
+        camera.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+      });
+      
+      document.getElementById('zoom-out').addEventListener('click', () => {
+        const currentPos = cameraRig.getAttribute('position');
+        cameraRig.setAttribute('position', {
+          x: currentPos.x,
+          y: currentPos.y,
+          z: currentPos.z - 0.3
+        });
+      });
+      
+      // Botones de la barra inferior
+      document.getElementById('mode-3d-mobile').addEventListener('click', () => {
+        setMode('3d');
+      });
+      
+      document.getElementById('mode-vr-mobile').addEventListener('click', () => {
+        setMode('vr');
+      });
+      
+      document.getElementById('mode-ar-mobile').addEventListener('click', () => {
+        setMode('ar');
+      });
+      
+      document.getElementById('settings').addEventListener('click', () => {
+        alert('Configuración no implementada aún');
+      });
+    }
+    
+    // Establecer modo
+    function setMode(mode) {
+      currentMode = mode;
+      
+      // Actualizar botones
+      document.querySelectorAll('.mode-icon').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      if (mode === '3d') {
+        document.getElementById('mode-3d-mobile').classList.add('active');
+        isVRMode = false;
+      } else if (mode === 'vr') {
+        document.getElementById('mode-vr-mobile').classList.add('active');
+        isVRMode = true;
+        enterVRMode();
+      } else if (mode === 'ar') {
+        document.getElementById('mode-ar-mobile').classList.add('active');
+        isVRMode = false;
+        alert('Modo AR no implementado aún');
+      }
+      
+      // Ajustar posición del panel
+      adjustDashboardPosition();
+    }
+    
+    // Cambiar a modo VR
+    function enterVRMode() {
+      const scene = document.querySelector('a-scene');
+      if (scene && scene.enterVR) {
+        scene.enterVR();
+        isVRMode = true;
+        adjustDashboardPosition();
+      }
+    }
+    
+    // Configurar eventos
+    function setupEventListeners() {
+      // Botón de VR
+      document.getElementById('vr-button').addEventListener('click', enterVRMode);
+      
+      // Selector de modo móvil
+      document.getElementById('3d-mode-btn').addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('3d-mode-btn').classList.add('active');
+        setMode('3d');
+      });
+      
+      document.getElementById('vr-mode-btn').addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('vr-mode-btn').classList.add('active');
+        setMode('vr');
+      });
+      
+      // Controles de escritorio
+      document.getElementById('mode-3d').addEventListener('click', () => {
+        setMode('3d');
+      });
+      
+      document.getElementById('mode-vr').addEventListener('click', () => {
+        setMode('vr');
+      });
+      
+      // Configurar controles adicionales para móviles
+      setupMobileControls();
+    }
+    
+    // Inicializar la aplicación
+    window.addEventListener('load', () => {
+      // Crear partículas de fondo
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = isMobile ? 30 : 60;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // Propiedades aleatorias
+        const size = Math.random() * 3 + 1;
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        const delay = Math.random() * 15;
+        const duration = Math.random() * 10 + 10;
+        
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${posX}%`;
+        particle.style.top = `${posY}%`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+        
+        particlesContainer.appendChild(particle);
+      }
+      
+      // Configurar inter
