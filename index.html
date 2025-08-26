@@ -8,8 +8,8 @@
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   
-  <!-- Cargar Paho MQTT -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js"></script>
+  <!-- Cargar mqtt.js desde CDN (compatible con HiveMQ) -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   
   <!-- Biblioteca para el joystick -->
   <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
@@ -741,7 +741,7 @@
   <!-- Loader de conexión -->
   <div class="loader" id="loader">
     <div class="loader-spinner"></div>
-    <div class="loader-text">Conectando a Estación Horus...<br>Probando HiveMQ</div>
+    <div class="loader-text">Conectando a HiveMQ...</div>
   </div>
 
   <script>
@@ -752,28 +752,13 @@
     let mqttConnected = false;
     let cameraRig, camera;
     let isVRMode = false;
-    
-    // CONFIGURACIÓN CORRECTA PARA HIVEMQ
-    const mqttConfig = {
-      host: "broker.hivemq.com",
-      port: 8883,  // ¡PUERTO CORRECTO PARA WSS!
-      path: "/mqtt",
-      secure: true,
-      name: "HiveMQ (configuración correcta)"
-    };
+    let lastDataTime = null;
     
     // Elementos UI
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
     const loader = document.getElementById('loader');
     const loaderText = document.querySelector('.loader-text');
-    
-    // Verificar si Paho está disponible
-    function isPahoReady() {
-      return typeof Paho !== 'undefined' && 
-             typeof Paho.MQTT !== 'undefined' && 
-             typeof Paho.MQTT.Client !== 'undefined';
-    }
     
     // Actualizar estado de conexión
     function updateConnectionStatus(connected, message = "") {
@@ -789,6 +774,9 @@
             loader.style.display = 'none';
           }, 500);
         }, 800);
+      } else {
+        loader.style.display = 'flex';
+        loader.style.opacity = '1';
       }
     }
     
@@ -809,207 +797,6 @@
       } else {
         // Posición para 3D normal - ¡CORREGIDA! No está metido en el suelo
         dashboard.setAttribute('position', '0 1.2 -1.5');
-      }
-    }
-    
-    // Conectar al broker HiveMQ
-    function connectToBroker() {
-      updateLoaderMessage(`Conectando a ${mqttConfig.name}...`);
-      
-      // Generar un ID único para el cliente
-      const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
-      
-      try {
-        // Crear cliente MQTT
-        console.log(`Creando cliente MQTT con ID: ${mqttClientId}`);
-        console.log(`Conectando a: ${mqttConfig.host}:${mqttConfig.port}${mqttConfig.path}`);
-        
-        mqttClient = new Paho.MQTT.Client(
-          mqttConfig.host, 
-          mqttConfig.port, 
-          mqttConfig.path, 
-          mqttClientId
-        );
-        
-        // Configurar callbacks
-        mqttClient.onConnectionLost = (responseObject) => {
-          console.error(`Conexión MQTT perdida: ${responseObject.errorMessage || 'Desconocido'}`);
-          updateConnectionStatus(false, "Conexión perdida");
-          
-          // Intentar reconectar después de 5 segundos
-          setTimeout(() => {
-            if (!mqttConnected) {
-              connectToBroker();
-            }
-          }, 5000);
-        };
-        
-        mqttClient.onMessageArrived = (message) => {
-          const topic = message.destinationName;
-          const payload = message.payloadString;
-          console.log(`Mensaje recibido - ${topic}: ${payload}`);
-          updateDashboard(topic, payload);
-          updateConnectionStatus(true, `Conectado a ${mqttConfig.name}`);
-        };
-        
-        // Conectar
-        console.log("Intentando conectar al broker...");
-        mqttClient.connect({
-          useSSL: mqttConfig.secure,
-          timeout: 10,
-          onSuccess: () => {
-            console.log(`Conexión MQTT establecida con ${mqttConfig.name}`);
-            updateConnectionStatus(true, `Conectado`);
-            
-            // Suscribirse a todos los topics de tu ESP32
-            const topics = [
-              "horus/vvb/temperatura",
-              "horus/vvb/humedad",
-              "horus/vvb/presion",
-              "horus/vvb/altitud",
-              "horus/vvb/gas",
-              "horus/vvb/lluvia",
-              "horus/vvb/pm25",
-              "horus/vvb/pm10",
-              "horus/vvb/wind_direction",
-              "horus/vvb/wind_speed"
-            ];
-            
-            topics.forEach(topic => {
-              mqttClient.subscribe(topic, {
-                onSuccess: () => console.log(`Suscrito a ${topic}`),
-                onFailure: (error) => console.error(`Error suscribiendo a ${topic}: ${error.errorMessage || error}`)
-              });
-            });
-          },
-          onFailure: (error) => {
-            console.error(`Error al conectar: ${error.errorMessage || error}`);
-            updateLoaderMessage(`Error: ${error.errorMessage || 'Verifica tu configuración'}`);
-            
-            // Si HiveMQ falla, intentar con Mosquitto como respaldo
-            console.log("Intentando con broker alternativo Mosquitto...");
-            connectToMosquitto();
-          }
-        });
-      } catch (error) {
-        console.error(`Error crítico al intentar conectar: ${error.message}`);
-        updateLoaderMessage(`Error: ${error.message}<br>Verifica tu configuración`);
-        
-        // Intentar con alternativa
-        setTimeout(connectToMosquitto, 2000);
-      }
-    }
-    
-    // Conectar al broker Mosquitto como alternativa
-    function connectToMosquitto() {
-      updateLoaderMessage("Intentando con broker alternativo...");
-      
-      const mosquittoConfig = {
-        host: "test.mosquitto.org",
-        port: 8081,
-        path: "/mqtt",
-        secure: true,
-        name: "Mosquitto (alternativa)"
-      };
-      
-      // Generar un ID único para el cliente
-      const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
-      
-      try {
-        // Crear cliente MQTT
-        console.log(`Creando cliente MQTT con ID: ${mqttClientId}`);
-        console.log(`Conectando a: ${mosquittoConfig.host}:${mosquittoConfig.port}${mosquittoConfig.path}`);
-        
-        mqttClient = new Paho.MQTT.Client(
-          mosquittoConfig.host, 
-          mosquittoConfig.port, 
-          mosquittoConfig.path, 
-          mqttClientId
-        );
-        
-        // Configurar callbacks
-        mqttClient.onConnectionLost = (responseObject) => {
-          console.error(`Conexión MQTT perdida: ${responseObject.errorMessage || 'Desconocido'}`);
-          updateConnectionStatus(false, "Conexión perdida");
-          
-          // Intentar reconectar después de 5 segundos
-          setTimeout(() => {
-            if (!mqttConnected) {
-              connectToMosquitto();
-            }
-          }, 5000);
-        };
-        
-        mqttClient.onMessageArrived = (message) => {
-          const topic = message.destinationName;
-          const payload = message.payloadString;
-          console.log(`Mensaje recibido - ${topic}: ${payload}`);
-          updateDashboard(topic, payload);
-          updateConnectionStatus(true, `Conectado a ${mosquittoConfig.name}`);
-        };
-        
-        // Conectar
-        console.log("Intentando conectar al broker Mosquitto...");
-        mqttClient.connect({
-          useSSL: mosquittoConfig.secure,
-          timeout: 10,
-          onSuccess: () => {
-            console.log(`Conexión MQTT establecida con ${mosquittoConfig.name}`);
-            updateConnectionStatus(true, `Conectado`);
-            
-            // Suscribirse a todos los topics
-            const topics = [
-              "horus/vvb/temperatura",
-              "horus/vvb/humedad",
-              "horus/vvb/presion",
-              "horus/vvb/altitud",
-              "horus/vvb/gas",
-              "horus/vvb/lluvia",
-              "horus/vvb/pm25",
-              "horus/vvb/pm10",
-              "horus/vvb/wind_direction",
-              "horus/vvb/wind_speed"
-            ];
-            
-            topics.forEach(topic => {
-              mqttClient.subscribe(topic, {
-                onSuccess: () => console.log(`Suscrito a ${topic}`),
-                onFailure: (error) => console.error(`Error suscribiendo a ${topic}: ${error.errorMessage || error}`)
-              });
-            });
-          },
-          onFailure: (error) => {
-            console.error(`Error al conectar a Mosquitto: ${error.errorMessage || error}`);
-            updateLoaderMessage("Error: No se pudo conectar al broker MQTT.<br>Verifica tu conexión a internet");
-          }
-        });
-      } catch (error) {
-        console.error(`Error crítico al intentar conectar a Mosquitto: ${error.message}`);
-        updateLoaderMessage("Error: No se pudo conectar al broker MQTT.<br>Verifica tu conexión a internet");
-      }
-    }
-    
-    // Actualizar el dashboard con los datos recibidos
-    function updateDashboard(topic, payload) {
-      if (topic === "horus/vvb/temperatura") {
-        document.getElementById('temp-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/humedad") {
-        document.getElementById('hum-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/presion") {
-        document.getElementById('press-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/altitud") {
-        document.getElementById('alt-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/gas") {
-        document.getElementById('gas-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/lluvia") {
-        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
-        document.getElementById('rain-value').setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
-      } else if (topic === "horus/vvb/pm25") {
-        document.getElementById('pm25-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/pm10") {
-        document.getElementById('pm10-value').setAttribute('text', `value: ${payload}`);
-      } else if (topic === "horus/vvb/wind_direction") {
-        document.getElementById('wind-value').setAttribute('text', `value: ${payload}`);
       }
     }
     
@@ -1120,6 +907,131 @@
       });
     }
     
+    // Conectar al broker HiveMQ usando mqtt.js
+    function connectToHiveMQ() {
+      updateLoaderMessage("Conectando a HiveMQ...");
+      
+      // URL del broker HiveMQ
+      const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
+      
+      // Opciones de conexión
+      const options = {
+        clientId: "web-client-" + Math.random().toString(16).substr(2, 8),
+        protocolVersion: 4,  // MQTT v3.1.1
+        clean: true,
+        connectTimeout: 10000,
+        reconnectPeriod: 3000
+      };
+      
+      console.log("Intentando conectar a HiveMQ:", brokerUrl);
+      console.log("Opciones de conexión:", options);
+      
+      try {
+        // Crear cliente MQTT usando mqtt.js
+        mqttClient = mqtt.connect(brokerUrl, options);
+        
+        // Manejar conexión exitosa
+        mqttClient.on("connect", () => {
+          console.log("✅ Conexión establecida con HiveMQ");
+          updateConnectionStatus(true, "Conectado a HiveMQ");
+          
+          // Suscribirse a todos los topics de la estación Horus
+          mqttClient.subscribe("horus/#", (err) => {
+            if (err) {
+              console.error("❌ Error al suscribirse a horus/#:", err);
+              updateLoaderMessage("Error al suscribirse a los topics");
+            } else {
+              console.log("🔍 Suscrito a horus/# (todos los topics Horus)");
+              updateLoaderMessage("Conectado a HiveMQ - Suscrito a topics");
+            }
+          });
+        });
+        
+        // Manejar mensajes recibidos
+        mqttClient.on("message", (topic, payload) => {
+          const value = payload.toString().trim();
+          if (!value) return;
+          
+          // Registrar en consola
+          console.log("📩 Tópico recibido:", topic);
+          console.log("📦 Valor:", value);
+          
+          // Actualizar el tiempo de última recepción
+          lastDataTime = Date.now();
+          
+          // Mapeo de topics a elementos del dashboard
+          const topicMap = {
+            "horus/vvb/temperatura": "temp-value",
+            "horus/vvb/humedad": "hum-value",
+            "horus/vvb/presion": "press-value",
+            "horus/vvb/altitud": "alt-value",
+            "horus/vvb/gas": "gas-value",
+            "horus/vvb/lluvia": "rain-value",
+            "horus/vvb/pm25": "pm25-value",
+            "horus/vvb/pm10": "pm10-value",
+            "horus/vvb/wind_direction": "wind-value"
+          };
+          
+          const elementId = topicMap[topic];
+          if (!elementId) {
+            console.warn("⚠️ Tópico no mapeado:", topic);
+            return;
+          }
+          
+          const element = document.getElementById(elementId);
+          if (!element) return;
+          
+          // Actualizar el valor en el dashboard
+          if (topic === "horus/vvb/lluvia") {
+            const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(value.toLowerCase());
+            element.setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
+          } else {
+            element.setAttribute('text', `value: ${value}`);
+          }
+        });
+        
+        // Manejar errores
+        mqttClient.on("error", (err) => {
+          console.error("❌ Error MQTT:", err);
+          updateLoaderMessage(`Error: ${err.message}<br>Verifica tu conexión`);
+        });
+        
+        // Manejar cierre de conexión
+        mqttClient.on("close", () => {
+          console.log("🔌 Conexión cerrada");
+          updateConnectionStatus(false, "Conexión cerrada");
+        });
+        
+      } catch (error) {
+        console.error("❌ Error al crear cliente MQTT:", error);
+        updateLoaderMessage(`Error: ${error.message}<br>Verifica tu configuración`);
+      }
+    }
+    
+    // Actualizar el dashboard con los datos recibidos
+    function updateDashboard(topic, payload) {
+      if (topic === "horus/vvb/temperatura") {
+        document.getElementById('temp-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/humedad") {
+        document.getElementById('hum-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/presion") {
+        document.getElementById('press-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/altitud") {
+        document.getElementById('alt-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/gas") {
+        document.getElementById('gas-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/lluvia") {
+        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
+        document.getElementById('rain-value').setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
+      } else if (topic === "horus/vvb/pm25") {
+        document.getElementById('pm25-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/pm10") {
+        document.getElementById('pm10-value').setAttribute('text', `value: ${payload}`);
+      } else if (topic === "horus/vvb/wind_direction") {
+        document.getElementById('wind-value').setAttribute('text', `value: ${payload}`);
+      }
+    }
+    
     // Inicializar la aplicación
     window.addEventListener('load', () => {
       // Crear partículas de fondo
@@ -1156,26 +1068,8 @@
       setupEventListeners();
       initJoystick();
       
-      // Verificar y esperar a que Paho esté listo
-      if (isPahoReady()) {
-        console.log("Biblioteca Paho MQTT cargada correctamente");
-        connectToBroker();
-      } else {
-        console.log("Biblioteca Paho MQTT no cargada, intentando cargar...");
-        
-        // Intentar cargar Paho nuevamente si no está disponible
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js';
-        script.onload = function() {
-          console.log("Biblioteca Paho MQTT cargada exitosamente");
-          connectToBroker();
-        };
-        script.onerror = function() {
-          console.error("Error: No se pudo cargar la biblioteca MQTT");
-          updateLoaderMessage("Error: No se pudo cargar la biblioteca MQTT.<br>Verifica tu conexión a internet.");
-        };
-        document.head.appendChild(script);
-      }
+      // Conectar al broker HiveMQ
+      connectToHiveMQ();
       
       // Ajustar posición inicial del panel
       setTimeout(adjustDashboardPosition, 1000);
