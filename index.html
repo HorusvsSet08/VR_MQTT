@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD COMPLETO</title>
+  <title>HORUS STATION - DASHBOARD MÓVIL OPTIMIZADO</title>
   
-  <!-- Cargar A-Frame 1.4.2 -->
+  <!-- Cargar A-Frame 1.4.2 con optimizaciones para móviles -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   
-  <!-- Cargar mqtt.js desde CDN (compatible con HiveMQ) -->
+  <!-- Cargar mqtt.js desde CDN -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   
   <!-- Biblioteca para el joystick -->
@@ -36,6 +36,8 @@
     
     * {
       box-sizing: border-box;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     
     body {
@@ -46,31 +48,6 @@
       color: var(--text);
       height: 100vh;
       position: relative;
-    }
-    
-    /* Efecto de partículas de fondo */
-    .particles {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
-    }
-    
-    .particle {
-      position: absolute;
-      background: var(--primary);
-      border-radius: 50%;
-      opacity: 0.1;
-      animation: float 15s infinite linear;
-    }
-    
-    @keyframes float {
-      0% { transform: translateY(0) translateX(0); opacity: 0.1; }
-      50% { opacity: 0.3; }
-      100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
     }
     
     /* Indicador de conexión */
@@ -89,11 +66,6 @@
       backdrop-filter: blur(10px);
       box-shadow: var(--shadow);
       transition: var(--transition);
-    }
-    
-    #connection-status:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--glow);
     }
     
     .led {
@@ -150,367 +122,6 @@
       overflow: hidden;
     }
     
-    #vr-button::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
-      opacity: 0;
-      transition: var(--transition);
-      pointer-events: none;
-    }
-    
-    #vr-button:active::before {
-      opacity: 1;
-      transform: scale(0);
-    }
-    
-    #vr-button:hover {
-      transform: scale(1.05);
-      box-shadow: var(--glow);
-    }
-    
-    /* BARRA IZQUIERDA - CORREGIDA */
-    #left-bar {
-      position: fixed;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 60px;
-      height: 200px;
-      background: rgba(0, 10, 30, 0.7);
-      border-radius: 30px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-around;
-      z-index: 1000;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 234, 255, 0.2);
-      display: none;
-    }
-    
-    .control-icon {
-      font-size: 24px;
-      color: var(--primary);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .control-icon:hover {
-      transform: scale(1.2);
-      color: white;
-    }
-    
-    /* BARRA INFERIOR - CORREGIDA (ÚNICA BARRA DE MENÚ) */
-    #bottom-bar {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 250px;
-      height: 60px;
-      background: rgba(0, 10, 30, 0.7);
-      border-radius: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      z-index: 1000;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 234, 255, 0.2);
-      display: none;
-    }
-    
-    .mode-icon {
-      font-size: 28px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .mode-icon.active {
-      color: var(--primary);
-      transform: scale(1.1);
-    }
-    
-    /* Estilo para escritorio */
-    #desktop-controls {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      z-index: 1000;
-      display: flex;
-      gap: 10px;
-    }
-    
-    .control-btn {
-      padding: 8px 15px;
-      background: rgba(0, 10, 30, 0.7);
-      color: var(--text);
-      border: 1px solid rgba(0, 234, 255, 0.2);
-      border-radius: 30px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: var(--transition);
-      backdrop-filter: blur(10px);
-    }
-    
-    .control-btn:hover {
-      background: rgba(0, 170, 255, 0.2);
-      border-color: var(--primary);
-    }
-    
-    /* Panel de datos 3D */
-    .sensor-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: var(--border-radius);
-      background: var(--card-bg);
-      padding: 18px 20px;
-      text-align: center;
-      box-shadow: var(--inner-shadow);
-      transition: var(--transition);
-      border: 1px solid rgba(0, 234, 255, 0.1);
-    }
-    
-    .sensor-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 25px rgba(0, 20, 50, 0.4);
-      border-color: rgba(0, 234, 255, 0.3);
-    }
-    
-    .sensor-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    
-    .sensor-icon {
-      font-size: 28px;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 234, 255, 0.1);
-      border-radius: 10px;
-    }
-    
-    .sensor-name {
-      color: var(--text-secondary);
-      font-size: 15px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-    }
-    
-    .sensor-value {
-      font-size: 26px;
-      font-weight: bold;
-      color: var(--primary);
-      line-height: 1.2;
-      text-shadow: 0 0 10px rgba(0, 234, 255, 0.2);
-      transition: var(--transition);
-    }
-    
-    .unit {
-      font-size: 16px;
-      color: var(--text-secondary);
-      font-weight: normal;
-    }
-    
-    /* Efectos para valores críticos */
-    .value-warning {
-      color: var(--warning);
-      text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
-    }
-    
-    .value-danger {
-      color: var(--danger);
-      text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
-    }
-    
-    /* Animaciones */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-      animation: fadeIn 0.5s ease-out forwards;
-      opacity: 0;
-    }
-    
-    /* Grid para las tarjetas */
-    .sensor-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      padding: 15px;
-    }
-    
-    /* Estilos para móviles */
-    @media (max-width: 768px) {
-      .mobile-only {
-        display: block;
-      }
-      
-      .desktop-only {
-        display: none;
-      }
-      
-      .sensor-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        padding: 10px;
-      }
-      
-      .sensor-card {
-        padding: 12px 15px;
-      }
-      
-      .sensor-icon {
-        font-size: 22px;
-        width: 32px;
-        height: 32px;
-      }
-      
-      .sensor-name {
-        font-size: 13px;
-      }
-      
-      .sensor-value {
-        font-size: 20px;
-      }
-      
-      .unit {
-        font-size: 14px;
-      }
-      
-      #left-bar, #bottom-bar {
-        display: flex;
-      }
-    }
-    
-    /* Estilos para escritorio */
-    @media (min-width: 769px) {
-      .mobile-only {
-        display: none;
-      }
-      
-      .desktop-only {
-        display: block;
-      }
-    }
-    
-    /* Efecto de brillo en el dashboard */
-    .dashboard-glow {
-      position: relative;
-      z-index: 1;
-    }
-    
-    .dashboard-glow::after {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, var(--primary), transparent, var(--secondary), transparent) center/400% 400% no-repeat;
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      z-index: -1;
-      animation: rotate 15s linear infinite;
-    }
-    
-    @keyframes rotate {
-      100% { background-position: 400% 0; }
-    }
-    
-    /* Estilo para el título */
-    .dashboard-title {
-      text-align: center;
-      color: var(--primary);
-      font-size: 28px;
-      margin-bottom: 25px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      text-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
-      position: relative;
-      padding-bottom: 10px;
-    }
-    
-    .dashboard-title::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      border-radius: 3px;
-    }
-    
-    /* Estilo para el loader */
-    .loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--dark-bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      transition: var(--transition);
-    }
-    
-    .loader-spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid rgba(0, 234, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: var(--primary);
-      animation: spin 1s ease-in-out infinite;
-      margin-bottom: 20px;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .loader-text {
-      color: var(--primary);
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-align: center;
-      padding: 0 20px;
-    }
-    
-    .error-text {
-      color: var(--danger);
-    }
-    
-    /* Estilo para el cursor */
-    .a-cursor {
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .a-cursor:hover {
-      scale: 1.2;
-    }
-    
-    /* Estilo para el joystick */
     #joystick-container {
       position: fixed;
       left: 20px;
@@ -558,119 +169,169 @@
       transform: translate(-50%, -50%);
     }
     
-    /* Panel de depuración */
-    #debug-panel {
+    /* Panel de datos 3D */
+    .sensor-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--border-radius);
+      background: var(--card-bg);
+      padding: 18px 20px;
+      text-align: center;
+      box-shadow: var(--inner-shadow);
+      transition: var(--transition);
+      border: 1px solid rgba(0, 234, 255, 0.1);
+    }
+    
+    .sensor-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    
+    .sensor-icon {
+      font-size: 28px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 234, 255, 0.1);
+      border-radius: 10px;
+    }
+    
+    .sensor-name {
+      color: var(--text-secondary);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    
+    .sensor-value {
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--primary);
+      line-height: 1.2;
+      text-shadow: 0 0 10px rgba(0, 234, 255, 0.2);
+      transition: var(--transition);
+    }
+    
+    .unit {
+      font-size: 16px;
+      color: var(--text-secondary);
+      font-weight: normal;
+    }
+    
+    /* Estilos específicos para móviles */
+    @media (max-width: 768px) {
+      .sensor-card {
+        padding: 15px 15px;
+      }
+      
+      .sensor-icon {
+        font-size: 24px;
+        width: 35px;
+        height: 35px;
+      }
+      
+      .sensor-name {
+        font-size: 14px;
+      }
+      
+      .sensor-value {
+        font-size: 22px;
+      }
+      
+      .unit {
+        font-size: 14px;
+      }
+      
+      /* Ajustar posición del dashboard para móviles */
+      #dashboard {
+        transform: scale(1.1);
+      }
+    }
+    
+    /* Estilo para el loader */
+    .loader {
       position: fixed;
-      top: 80px;
-      left: 15px;
-      right: 15px;
-      background: rgba(0, 10, 30, 0.85);
-      border-radius: 15px;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--dark-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      transition: var(--transition);
+    }
+    
+    .loader-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(0, 234, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loader-text {
+      color: var(--primary);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-align: center;
+      padding: 0 20px;
+    }
+    
+    /* Mensaje de ayuda para móviles */
+    .mobile-help {
+      position: fixed;
+      bottom: 100px;
+      left: 0;
+      right: 0;
       padding: 15px;
+      background: rgba(0, 10, 30, 0.8);
+      border-radius: 15px;
+      text-align: center;
       z-index: 1000;
-      max-height: 60vh;
-      overflow-y: auto;
+      display: none;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(0, 234, 255, 0.2);
     }
     
-    #debug-panel h3 {
+    .mobile-help h3 {
       color: var(--primary);
       margin-top: 0;
       margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
     
-    #debug-content {
-      font-family: monospace;
-      font-size: 13px;
-      line-height: 1.4;
-      color: #a0a0a0;
-      max-height: 40vh;
-      overflow-y: auto;
-      padding-right: 10px;
+    .mobile-help p {
+      margin: 5px 0;
+      font-size: 14px;
     }
     
-    .debug-entry {
-      margin-bottom: 5px;
-      padding-left: 10px;
-      border-left: 2px solid var(--primary);
-    }
-    
-    .debug-info {
-      color: #88ccff;
-    }
-    
-    .debug-error {
-      color: #ff8888;
-    }
-    
-    .debug-success {
-      color: #88ff88;
-    }
-    
-    .debug-button {
-      background: var(--primary);
-      color: #000;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 30px;
+    .mobile-help .action {
+      background: rgba(0, 234, 255, 0.2);
+      padding: 3px 8px;
+      border-radius: 20px;
       font-weight: bold;
-      cursor: pointer;
-      margin-right: 10px;
-      margin-bottom: 10px;
-      transition: var(--transition);
-    }
-    
-    .debug-button:hover {
-      transform: scale(1.05);
-      box-shadow: var(--glow);
-    }
-    
-    .debug-button.test {
-      background: var(--warning);
-    }
-    
-    .debug-button.reconnect {
-      background: var(--success);
-    }
-    
-    .debug-button.close {
-      background: var(--danger);
-      float: right;
-      padding: 5px 10px;
-      font-size: 16px;
     }
   </style>
 </head>
 <body>
-  <!-- Fondo de partículas -->
-  <div class="particles" id="particles"></div>
-  
   <!-- Indicador de conexión -->
   <div id="connection-status">
     <span class="led" id="connection-led"></span>
     <span id="connection-text">Conectando...</span>
-  </div>
-  
-  <!-- Panel de depuración -->
-  <div id="debug-panel">
-    <h3>
-      Panel de Depuración
-      <button class="debug-button close" id="debug-close">✕</button>
-    </h3>
-    
-    <div id="debug-content"></div>
-    
-    <button class="debug-button reconnect" id="reconnect-button">Reconectar</button>
-  </div>
-  
-  <!-- BARRA INFERIOR ÚNICA - Para otros controles -->
-  <div id="bottom-bar" class="mobile-only">
-    <div class="mode-icon active" id="mode-3d-mobile">📊</div>
-    <div class="mode-icon" id="mode-vr-mobile">🕶️</div>
   </div>
   
   <!-- Controles móviles -->
@@ -679,16 +340,25 @@
     <button id="vr-button">🕶️</button>
   </div>
   
+  <!-- Mensaje de ayuda para móviles -->
+  <div class="mobile-help" id="mobile-help">
+    <h3>📱 Navegación en Móvil</h3>
+    <p>Mueve tu <span class="action">teléfono</span> para mirar alrededor</p>
+    <p>Usa el <span class="action">joystick</span> izquierdo para moverte</p>
+    <p>Presiona <span class="action">VR</span> para modo realidad virtual</p>
+  </div>
+
   <!-- Escena 3D -->
-  <a-scene id="main-scene" embedded style="width: 100%; height: 100vh;" vr-mode-ui="enabled: false">
+  <a-scene id="main-scene" embedded style="width: 100%; height: 100vh;" 
+           vr-mode-ui="enabled: true; enterVRButton: #vr-button"
+           device-orientation-permission-ui="enabled: true"
+           loading-screen="dotsColor: #00eaff; backgroundColor: #000a1a">
     <a-entity id="camera-rig" position="0 1.6 0">
-      <a-entity id="camera" camera look-controls>
+      <a-entity id="camera" camera="fov: 80; userHeight: 1.6" look-controls wasd-controls="acceleration: 15">
         <a-cursor 
           raycaster="objects: .sensor-card" 
           color="#00eaff" 
-          fuse="false"
-          animation__click="property: scale; from: 1 1 1; to: 0.5 0.5 0.5; dur: 100; startEvents: click"
-          animation__fusing="property: scale; from: 1 1 1; to: 0.8 0.8 0.8; dur: 1500; easing: easeInCubic; startEvents: fusing">
+          fuse="false">
         </a-cursor>
       </a-entity>
     </a-entity>
@@ -699,15 +369,10 @@
     
     <!-- Suelo con rejilla -->
     <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.2" transparent="true"></a-plane>
-    <a-entity position="0 0.01 0" rotation="-90 0 0" 
-              geometry="primitive: plane; width: 50; height: 50" 
-              material="color: #003366; transparent: true; opacity: 0.1">
-    </a-entity>
     
-    <!-- Panel de datos - POSICION ALEJADA (NO ESTÁ METIDO EN EL SUELO) -->
-    <a-entity id="dashboard" position="0 1.2 -2.0" class="dashboard-glow">
+    <!-- Panel de datos -->
+    <a-entity id="dashboard" position="0 1.2 -2.5">
       <a-plane width="6" height="3.5" color="#0a1a30" opacity="0.9" transparent="true" radius="0.2"></a-plane>
-      <a-plane width="5.8" height="3.3" color="#000f2a" opacity="0.95" transparent="true" position="0 0 0.01"></a-plane>
       
       <a-text 
         value="ESTACIÓN HORUS" 
@@ -715,124 +380,106 @@
         position="0 1.3 0.1" 
         align="center" 
         width="5.5" 
-        font="exo2bold" 
-        shader="flat"
-        animation="property: position; from: 0 1.3 0.1; to: 0 1.35 0.1; dur: 2000; easing: easeInOutQuad; loop: true; dir: alternate">
+        font="exo2bold">
       </a-text>
       
       <!-- Temperatura -->
-      <a-entity position="-2 0.7 0.1" class="sensor-card fade-in" style="animation-delay: 0.1s">
+      <a-entity position="-2 0.7 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌡️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="TEMPERATURA" color="#FF5722" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="temp-value" value="--" color="#FF5722" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="temp-value" value="--" color="#FF5722" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="°C" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Humedad -->
-      <a-entity position="-0.5 0.7 0.1" class="sensor-card fade-in" style="animation-delay: 0.2s">
+      <a-entity position="-0.5 0.7 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="💧" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="HUMEDAD" color="#2196F3" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="hum-value" value="--" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="hum-value" value="--" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="%" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Presión -->
-      <a-entity position="1 0.7 0.1" class="sensor-card fade-in" style="animation-delay: 0.3s">
+      <a-entity position="1 0.7 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🔽" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="PRESIÓN" color="#9E9E9E" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="press-value" value="--" color="#9E9E9E" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="press-value" value="--" color="#9E9E9E" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="hPa" color="#a0a0a0" position="0.5 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Altitud -->
-      <a-entity position="-2 -0.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.4s">
+      <a-entity position="-2 -0.3 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="⛰️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="ALTITUD" color="#673AB7" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="alt-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="alt-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="m" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Gas -->
-      <a-entity position="-0.5 -0.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.5s">
+      <a-entity position="-0.5 -0.3 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="⛽" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="GAS" color="#FFEB3B" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="gas-value" value="--" color="#FFEB3B" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="gas-value" value="--" color="#FFEB3B" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="%" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Lluvia -->
-      <a-entity position="1 -0.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.6s">
+      <a-entity position="1 -0.3 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌧️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="LLUVIA" color="#2196F3" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="rain-value" value="no" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="rain-value" value="no" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
       </a-entity>
       
       <!-- PM2.5 -->
-      <a-entity position="-2 -1.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.7s">
+      <a-entity position="-2 -1.3 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="PM2.5" color="#9C27B0" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="pm25-value" value="--" color="#9C27B0" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="pm25-value" value="--" color="#9C27B0" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="μg/m³" color="#a0a0a0" position="0.6 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- PM10 -->
-      <a-entity position="-0.5 -1.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.8s">
+      <a-entity position="-0.5 -1.3 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="PM10" color="#673AB7" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="pm10-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="pm10-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="μg/m³" color="#a0a0a0" position="0.6 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Dirección del Viento -->
-      <a-entity position="1 -1.3 0.1" class="sensor-card fade-in" style="animation-delay: 0.9s">
+      <a-entity position="1 -1.3 0.1">
         <a-plane width="1.8" height="1.2" color="#152540" opacity="0.9" transparent="true" radius="0.2"></a-plane>
         <a-entity class="sensor-header">
           <a-text value="🌀" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
           <a-text value="VIENTO" color="#03A9F4" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="wind-value" value="--" color="#03A9F4" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold" 
-                text="shader: sdf; baseline: center; width: 1.4; letterSpacing: 5; whiteSpace: nowrap"></a-text>
+        <a-text id="wind-value" value="--" color="#03A9F4" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="°" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
-    </a-entity>
-    
-    <!-- Efecto de partículas decorativas -->
-    <a-entity position="0 2.5 -2">
-      <a-sphere radius="0.02" color="#00eaff" opacity="0.7"></a-sphere>
-      <a-animation attribute="position" from="0 2.5 -2" to="0 3 -2" dur="3000" 
-                   direction="alternate" repeat="indefinite" easing="easeInOutQuad"></a-animation>
     </a-entity>
   </a-scene>
 
@@ -845,46 +492,15 @@
   <script>
     // Variables globales
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    let currentMode = "3d";
     let mqttClient;
     let mqttConnected = false;
-    let cameraRig, camera;
-    let isVRMode = false;
-    let lastDataTime = null;
-    let debugPanelVisible = false;
     
     // Elementos UI
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
     const loader = document.getElementById('loader');
     const loaderText = document.querySelector('.loader-text');
-    const debugPanel = document.getElementById('debug-panel');
-    const debugContent = document.getElementById('debug-content');
-    const debugClose = document.getElementById('debug-close');
-    const reconnectButton = document.getElementById('reconnect-button');
-    
-    // Función para agregar mensajes al panel de depuración
-    function logDebug(message, type = 'info') {
-      const entry = document.createElement('div');
-      entry.className = `debug-entry debug-${type}`;
-      
-      // Obtener hora actual
-      const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-      
-      entry.innerHTML = `<span style="color:#666">[${timeStr}]</span> ${message}`;
-      debugContent.appendChild(entry);
-      debugContent.scrollTop = debugContent.scrollHeight;
-      
-      // Registrar en la consola del navegador
-      if (type === 'error') {
-        console.error(`[DEBUG] ${message}`);
-      } else if (type === 'success') {
-        console.log(`[DEBUG] ${message}`);
-      } else {
-        console.log(`[DEBUG] ${message}`);
-      }
-    }
+    const mobileHelp = document.getElementById('mobile-help');
     
     // Actualizar estado de conexión
     function updateConnectionStatus(connected, message = "") {
@@ -913,29 +529,19 @@
       }
     }
     
-    // Ajustar posición del panel según el modo
-    function adjustDashboardPosition() {
-      const dashboard = document.getElementById('dashboard');
-      
-      if (isVRMode) {
-        // Posición para VR - más cerca y ligeramente más bajo
-        dashboard.setAttribute('position', '0 1.2 -1.5');
-      } else {
-        // Posición para 3D normal - ¡CORREGIDA! No está metido en el suelo
-        dashboard.setAttribute('position', '0 1.2 -2.0');
-      }
-    }
-    
     // Inicializar el joystick para móviles
     function initJoystick() {
       if (!isMobile) return;
       
+      // Mostrar mensaje de ayuda para móviles
+      mobileHelp.style.display = 'block';
+      
       // Obtener referencias a la cámara
-      cameraRig = document.getElementById('camera-rig');
-      camera = document.getElementById('camera');
+      const cameraRig = document.getElementById('camera-rig');
+      const camera = document.getElementById('camera');
       
       if (!cameraRig || !camera) {
-        logDebug("No se encontraron elementos de cámara", 'error');
+        console.error("No se encontraron elementos de cámara");
         return;
       }
       
@@ -955,8 +561,8 @@
         const angle = data.angle.radian;
         const force = data.force;
         
-        // Calcular movimiento - AJUSTE DE SENSIBILIDAD
-        const moveSpeed = 0.03 * force; // Reducido para mejor control
+        // Calcular movimiento
+        const moveSpeed = 0.05 * force;
         const dx = Math.sin(angle) * moveSpeed;
         const dz = Math.cos(angle) * moveSpeed;
         
@@ -967,203 +573,12 @@
           y: currentPos.y,
           z: currentPos.z - dz
         });
-        
-        // Actualizar dirección de la cámara
-        if (force > 0.1) {
-          camera.setAttribute('rotation', {
-            x: 0,
-            y: (angle * (180 / Math.PI) - 90) % 360,
-            z: 0
-          });
-        }
       });
-      
-      // Detener movimiento cuando se suelta
-      joystick.on('end', () => {
-        if (camera && cameraRig) {
-          camera.setAttribute('rotation', { x: 0, y: 0, z: 0 });
-        }
-      });
-    }
-    
-    // Establecer modo
-    function setMode(mode) {
-      currentMode = mode;
-      
-      // Actualizar botones
-      document.querySelectorAll('.mode-icon').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      if (mode === '3d') {
-        document.getElementById('mode-3d-mobile').classList.add('active');
-        isVRMode = false;
-      } else if (mode === 'vr') {
-        document.getElementById('mode-vr-mobile').classList.add('active');
-        isVRMode = true;
-        enterVRMode();
-      }
-      
-      // Ajustar posición del panel
-      adjustDashboardPosition();
-    }
-    
-    // Cambiar a modo VR
-    function enterVRMode() {
-      const scene = document.querySelector('a-scene');
-      if (scene && scene.enterVR) {
-        scene.enterVR();
-        isVRMode = true;
-        adjustDashboardPosition();
-      }
-    }
-    
-    // Configurar eventos
-    function setupEventListeners() {
-      // Botón de VR
-      document.getElementById('vr-button').addEventListener('click', enterVRMode);
-      
-      // Botones de la barra inferior
-      document.getElementById('mode-3d-mobile').addEventListener('click', () => {
-        setMode('3d');
-      });
-      
-      document.getElementById('mode-vr-mobile').addEventListener('click', () => {
-        setMode('vr');
-      });
-      
-      // Panel de depuración
-      document.addEventListener('keydown', (e) => {
-        // Ctrl + Alt + D para mostrar/ocultar panel de depuración
-        if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'd') {
-          debugPanelVisible = !debugPanelVisible;
-          debugPanel.style.display = debugPanelVisible ? 'block' : 'none';
-        }
-      });
-      
-      // Botón para cerrar el panel de depuración
-      debugClose.addEventListener('click', () => {
-        debugPanelVisible = false;
-        debugPanel.style.display = 'none';
-      });
-      
-      // Botón de reconexión
-      reconnectButton.addEventListener('click', () => {
-        logDebug("Forzando reconexión con HiveMQ...", 'info');
-        if (mqttClient) {
-          logDebug("Desconectando cliente existente...", 'info');
-          try {
-            mqttClient.end();
-          } catch (error) {
-            logDebug(`Error al desconectar: ${error.message}`, 'error');
-          }
-        }
-        connectToHiveMQ();
-      });
-    }
-    
-    // Función para formatear valores según el sensor
-    function formatSensorValue(topic, value) {
-      // Convertir a número si es posible
-      const numValue = parseFloat(value);
-      
-      // Manejo especial para cada sensor
-      if (topic === "horus/vvb/temperatura") {
-        if (!isNaN(numValue)) {
-          return numValue.toFixed(1);
-        }
-      } else if (topic === "horus/vvb/humedad") {
-        if (!isNaN(numValue)) {
-          return Math.min(100, Math.max(0, numValue)).toFixed(1);
-        }
-      } else if (topic === "horus/vvb/presion") {
-        if (!isNaN(numValue)) {
-          return Math.round(numValue);
-        }
-      } else if (topic === "horus/vvb/altitud") {
-        if (!isNaN(numValue)) {
-          return Math.round(numValue);
-        }
-      } else if (topic === "horus/vvb/gas") {
-        if (!isNaN(numValue)) {
-          // Escala lógica para el sensor MQ-2 (0-100%)
-          const percent = Math.min(100, Math.max(0, numValue / 10)).toFixed(1);
-          return percent;
-        }
-      } else if (topic === "horus/vvb/lluvia") {
-        const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(value.toLowerCase());
-        return raining ? "sí" : "no";
-      } else if (topic === "horus/vvb/pm25" || topic === "horus/vvb/pm10") {
-        if (!isNaN(numValue)) {
-          return Math.round(numValue);
-        }
-      } else if (topic === "horus/vvb/wind_direction") {
-        if (!isNaN(numValue)) {
-          return Math.round(numValue);
-        }
-      }
-      
-      // Si no se puede formatear, devolver el valor original
-      return value;
-    }
-    
-    // Actualizar efectos visuales según el valor
-    function updateVisualEffects(topic, value) {
-      const numValue = parseFloat(value);
-      
-      if (isNaN(numValue)) return;
-      
-      let element;
-      
-      if (topic === "horus/vvb/temperatura") {
-        element = document.getElementById('temp-value').parentNode;
-        if (numValue > 30) {
-          element.setAttribute('color', '#ff4d4d');
-          element.classList.add('value-danger');
-          element.classList.remove('value-warning');
-        } else if (numValue > 25) {
-          element.setAttribute('color', '#ffcc00');
-          element.classList.add('value-warning');
-          element.classList.remove('value-danger');
-        } else {
-          element.setAttribute('color', '#FF5722');
-          element.classList.remove('value-warning', 'value-danger');
-        }
-      } else if (topic === "horus/vvb/humedad") {
-        element = document.getElementById('hum-value').parentNode;
-        if (numValue > 80) {
-          element.setAttribute('color', '#ff4d4d');
-          element.classList.add('value-danger');
-          element.classList.remove('value-warning');
-        } else if (numValue > 60) {
-          element.setAttribute('color', '#ffcc00');
-          element.classList.add('value-warning');
-          element.classList.remove('value-danger');
-        } else {
-          element.setAttribute('color', '#2196F3');
-          element.classList.remove('value-warning', 'value-danger');
-        }
-      } else if (topic === "horus/vvb/gas") {
-        element = document.getElementById('gas-value').parentNode;
-        if (numValue > 50) {
-          element.setAttribute('color', '#ff4d4d');
-          element.classList.add('value-danger');
-          element.classList.remove('value-warning');
-        } else if (numValue > 20) {
-          element.setAttribute('color', '#ffcc00');
-          element.classList.add('value-warning');
-          element.classList.remove('value-danger');
-        } else {
-          element.setAttribute('color', '#FFEB3B');
-          element.classList.remove('value-warning', 'value-danger');
-        }
-      }
     }
     
     // Conectar al broker HiveMQ usando mqtt.js
     function connectToHiveMQ() {
       updateLoaderMessage("Conectando a HiveMQ...");
-      logDebug("Intentando conectar a HiveMQ...", 'info');
       
       // URL del broker HiveMQ
       const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
@@ -1177,25 +592,21 @@
         reconnectPeriod: 3000
       };
       
-      logDebug(`Conectando a: ${brokerUrl}`, 'info');
-      logDebug(`Opciones: ${JSON.stringify(options)}`, 'info');
-      
       try {
         // Crear cliente MQTT usando mqtt.js
         mqttClient = mqtt.connect(brokerUrl, options);
         
         // Manejar conexión exitosa
         mqttClient.on("connect", () => {
-          logDebug("✅ Conexión establecida con HiveMQ", 'success');
           updateConnectionStatus(true, "Conectado a HiveMQ");
           
           // Suscribirse a todos los topics de la estación Horus
           mqttClient.subscribe("horus/#", (err) => {
             if (err) {
-              logDebug(`❌ Error al suscribirse a horus/#: ${err}`, 'error');
+              console.error("❌ Error al suscribirse a horus/#:", err);
               updateLoaderMessage("Error al suscribirse a los topics");
             } else {
-              logDebug("🔍 Suscrito a horus/# (todos los topics Horus)", 'success');
+              console.log("🔍 Suscrito a horus/# (todos los topics Horus)");
               updateLoaderMessage("Conectado a HiveMQ - Suscrito a topics");
             }
           });
@@ -1204,17 +615,7 @@
         // Manejar mensajes recibidos
         mqttClient.on("message", (topic, payload) => {
           const value = payload.toString().trim();
-          if (!value) {
-            logDebug(`⚠️ Valor vacío recibido para el topic: ${topic}`, 'warning');
-            return;
-          }
-          
-          // Registrar en consola
-          logDebug(`📩 Tópico recibido: ${topic}`, 'info');
-          logDebug(`📦 Valor: ${value}`, 'info');
-          
-          // Actualizar el tiempo de última recepción
-          lastDataTime = Date.now();
+          if (!value) return;
           
           // Mapeo de topics a elementos del dashboard
           const topicMap = {
@@ -1230,49 +631,34 @@
           };
           
           const elementId = topicMap[topic];
-          if (!elementId) {
-            logDebug(`⚠️ Tópico no mapeado: ${topic}`, 'warning');
-            return;
-          }
+          if (!elementId) return;
           
           const element = document.getElementById(elementId);
-          if (!element) {
-            logDebug(`⚠️ Elemento no encontrado: ${elementId}`, 'warning');
-            return;
-          }
-          
-          // Formatear el valor según el sensor
-          const formattedValue = formatSensorValue(topic, value);
+          if (!element) return;
           
           // Actualizar el valor en el dashboard
-          element.setAttribute('text', `value: ${formattedValue}`);
-          
-          // Actualizar efectos visuales según el valor
-          updateVisualEffects(topic, formattedValue);
-          
-          logDebug(`✅ Actualizado ${topic} con valor: ${formattedValue}`, 'success');
+          if (topic === "horus/vvb/lluvia") {
+            const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(value.toLowerCase());
+            element.setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
+          } else {
+            element.setAttribute('text', `value: ${value}`);
+          }
         });
         
         // Manejar errores
         mqttClient.on("error", (err) => {
-          logDebug(`❌ Error MQTT: ${err.message}`, 'error');
+          console.error("❌ Error MQTT:", err);
           updateLoaderMessage(`Error: ${err.message}<br>Verifica tu conexión`);
         });
         
         // Manejar cierre de conexión
         mqttClient.on("close", () => {
-          logDebug("🔌 Conexión cerrada", 'info');
+          console.log("🔌 Conexión cerrada");
           updateConnectionStatus(false, "Conexión cerrada");
-          
-          // Intentar reconectar
-          if (mqttConnected) {
-            logDebug("🔄 Intentando reconectar...", 'info');
-            setTimeout(connectToHiveMQ, 5000);
-          }
         });
         
       } catch (error) {
-        logDebug(`❌ Error al crear cliente MQTT: ${error.message}`, 'error');
+        console.error("❌ Error al crear cliente MQTT:", error);
         updateLoaderMessage(`Error: ${error.message}<br>Verifica tu configuración`);
       }
     }
@@ -1281,37 +667,22 @@
     window.addEventListener('load', () => {
       // Configurar interfaz para móviles
       if (isMobile) {
-        document.getElementById('bottom-bar').style.display = 'flex';
+        document.getElementById('mobile-controls').style.display = 'block';
       }
       
       // Inicializar elementos
-      setupEventListeners();
       initJoystick();
-      
-      // Inicializar panel de depuración
-      debugPanel.style.display = 'none';
-      logDebug("Sistema de depuración inicializado", 'info');
-      logDebug("Presiona Ctrl + Alt + D para mostrar/ocultar el panel de depuración", 'info');
       
       // Conectar al broker HiveMQ
       connectToHiveMQ();
       
-      // Ajustar posición inicial del panel
-      setTimeout(adjustDashboardPosition, 1000);
-      
-      // Ajustar posición cuando se entra/sale de VR
-      const scene = document.querySelector('a-scene');
-      if (scene) {
-        scene.addEventListener('enter-vr', () => {
-          isVRMode = true;
-          adjustDashboardPosition();
-        });
-        
-        scene.addEventListener('exit-vr', () => {
-          isVRMode = false;
-          adjustDashboardPosition();
-        });
-      }
+      // Asegurar que la escena se adapte correctamente en móviles
+      setTimeout(() => {
+        const scene = document.querySelector('a-scene');
+        if (scene) {
+          scene.resize();
+        }
+      }, 500);
     });
   </script>
 </body>
