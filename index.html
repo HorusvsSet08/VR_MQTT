@@ -492,6 +492,8 @@
       font-size: 20px;
       font-weight: 600;
       letter-spacing: 1px;
+      text-align: center;
+      padding: 0 20px;
     }
     
     .error-text {
@@ -707,7 +709,7 @@
   <!-- Loader de conexión -->
   <div class="loader" id="loader">
     <div class="loader-spinner"></div>
-    <div class="loader-text">Conectando a Estación Horus...</div>
+    <div class="loader-text">Conectando a Estación Horus...<br>Probando brokers MQTT disponibles</div>
   </div>
 
   <script>
@@ -717,56 +719,49 @@
     let mqttClient;
     let mqttConnected = false;
     let cameraRig, camera;
+    let connectionAttempts = 0;
+    let maxAttempts = 5;
+    let currentBrokerIndex = 0;
+    
+    // Lista de brokers MQTT de respaldo
+    const mqttBrokers = [
+      {
+        host: "broker.hivemq.com",
+        port: 8884,
+        path: "/mqtt",
+        secure: true,
+        name: "HiveMQ"
+      },
+      {
+        host: "test.mosquitto.org",
+        port: 8081,
+        path: "/mqtt",
+        secure: true,
+        name: "Mosquitto"
+      },
+      {
+        host: "mqtt.eclipseprojects.io",
+        port: 443,
+        path: "/mqtt",
+        secure: true,
+        name: "Eclipse"
+      }
+    ];
     
     // Elementos UI
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
-    const joystickContainer = document.getElementById('joystick-container');
     const loader = document.getElementById('loader');
+    const loaderText = document.querySelector('.loader-text');
     
-    // Configuración MQTT CORREGIDA - USANDO WSS
-    const mqttServer = "broker.hivemq.com";
-    const mqttPort = 8884; // Puerto para WebSocket Secure (WSS)
-    const mqttPath = "/mqtt"; // Ruta necesaria
-    const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
-    
-    const topics = [
-      "horus/vvb/temperatura",
-      "horus/vvb/humedad",
-      "horus/vvb/presion",
-      "horus/vvb/altitud",
-      "horus/vvb/gas",
-      "horus/vvb/lluvia"
-    ];
-    
-    // Crear partículas de fondo
-    function createParticles() {
-      const particlesContainer = document.getElementById('particles');
-      const particleCount = isMobile ? 30 : 60;
-      
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        
-        // Propiedades aleatorias
-        const size = Math.random() * 3 + 1;
-        const posX = Math.random() * 100;
-        const posY = Math.random() * 100;
-        const delay = Math.random() * 15;
-        const duration = Math.random() * 10 + 10;
-        
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        particle.style.left = `${posX}%`;
-        particle.style.top = `${posY}%`;
-        particle.style.animationDelay = `${delay}s`;
-        particle.style.animationDuration = `${duration}s`;
-        
-        particlesContainer.appendChild(particle);
-      }
+    // Verificar si Paho está disponible
+    function isPahoReady() {
+      return typeof Paho !== 'undefined' && 
+             typeof Paho.MQTT !== 'undefined' && 
+             typeof Paho.MQTT.Client !== 'undefined';
     }
     
-    // Función para actualizar el estado de conexión
+    // Actualizar estado de conexión
     function updateConnectionStatus(connected, message = "") {
       mqttConnected = connected;
       connectionLed.className = connected ? "led connected" : "led";
@@ -783,31 +778,43 @@
       }
     }
     
-    // Inicializar conexión MQTT
-    function initMQTT() {
-      try {
-        // Verificar explícitamente que Paho.Client existe
-        if (typeof Paho === 'undefined' || 
-            typeof Paho.MQTT === 'undefined' || 
-            typeof Paho.MQTT.Client === 'undefined') {
-          throw new Error("Paho.Client no está definido. La biblioteca no se cargó correctamente.");
+    // Mostrar mensaje en el loader
+    function updateLoaderMessage(message) {
+      if (loaderText) {
+        loaderText.innerHTML = message;
+      }
+    }
+    
+    // Intentar conectar al broker actual
+    function tryConnectToCurrentBroker() {
+      if (currentBrokerIndex >= mqttBrokers.length) {
+        currentBrokerIndex = 0;
+        connectionAttempts++;
+        
+        if (connectionAttempts >= maxAttempts) {
+          updateLoaderMessage("Error: No se pudo conectar a ningún broker MQTT.<br>Verifica tu conexión a internet.");
+          console.error("Se alcanzó el máximo de intentos de conexión");
+          return;
         }
-
-        // Crear cliente MQTT con la configuración CORRECTA para WSS
-        mqttClient = new Paho.MQTT.Client(mqttServer, mqttPort, mqttPath, mqttClientId);
+      }
+      
+      const broker = mqttBrokers[currentBrokerIndex];
+      const mqttClientId = "web-client-" + Math.random().toString(36).substr(2, 9);
+      
+      updateLoaderMessage(`Conectando a ${broker.name}...<br>Intento ${connectionAttempts + 1} de ${maxAttempts}`);
+      console.log(`Intentando conectar a ${broker.host}:${broker.port}${broker.path}`);
+      
+      try {
+        // Crear cliente MQTT
+        mqttClient = new Paho.MQTT.Client(broker.host, broker.port, broker.path, mqttClientId);
         
         // Configurar callbacks
         mqttClient.onConnectionLost = (responseObject) => {
-          console.log("Conexión MQTT perdida:", responseObject.errorMessage);
-          updateConnectionStatus(false, responseObject.errorMessage || "Conexión perdida");
+          console.log(`Conexión MQTT perdida con ${broker.name}:`, responseObject.errorMessage);
           
-          // Reintentar conexión
-          setTimeout(() => {
-            if (!mqttConnected) {
-              console.log("Reintentando conexión MQTT...");
-              initMQTT();
-            }
-          }, 5000);
+          // Intentar con el siguiente broker
+          currentBrokerIndex++;
+          setTimeout(tryConnectToCurrentBroker, 2000);
         };
         
         mqttClient.onMessageArrived = (message) => {
@@ -815,18 +822,27 @@
           const payload = message.payloadString;
           console.log(`Mensaje recibido - ${topic}: ${payload}`);
           updateDashboard(topic, payload);
-          updateConnectionStatus(true, "Conectado");
+          updateConnectionStatus(true, `Conectado a ${broker.name}`);
         };
         
-        // Conectar CON SSL HABILITADO
+        // Conectar
         mqttClient.connect({
-          useSSL: true,  // ¡ESTO ES CRUCIAL PARA HTTPS!
+          useSSL: broker.secure,
           timeout: 5,
           onSuccess: () => {
-            console.log("Conexión MQTT establecida");
-            updateConnectionStatus(true, "Conectado");
+            console.log(`Conexión MQTT establecida con ${broker.name}`);
+            updateConnectionStatus(true, `Conectado a ${broker.name}`);
             
             // Suscribirse a los temas
+            const topics = [
+              "horus/vvb/temperatura",
+              "horus/vvb/humedad",
+              "horus/vvb/presion",
+              "horus/vvb/altitud",
+              "horus/vvb/gas",
+              "horus/vvb/lluvia"
+            ];
+            
             topics.forEach(topic => {
               mqttClient.subscribe(topic, {
                 onSuccess: () => console.log(`Suscrito a ${topic}`),
@@ -835,52 +851,34 @@
             });
           },
           onFailure: (error) => {
-            console.error("Error al conectar MQTT:", error.errorMessage || error);
-            updateConnectionStatus(false, error.errorMessage || "Error de conexión");
+            console.error(`Error al conectar a ${broker.name}:`, error.errorMessage || error);
             
-            // Mostrar mensaje de error en el loader
-            const loaderText = document.querySelector('.loader-text');
-            loaderText.textContent = `Error: ${error.errorMessage || 'Verifica tu red'}`;
-            loaderText.className = 'loader-text error-text';
-            
-            // Reintentar conexión
-            setTimeout(() => {
-              if (!mqttConnected) {
-                initMQTT();
-              }
-            }, 5000);
+            // Intentar con el siguiente broker
+            currentBrokerIndex++;
+            setTimeout(tryConnectToCurrentBroker, 2000);
           }
         });
       } catch (error) {
-        console.error("Error crítico al inicializar MQTT:", error);
-        updateConnectionStatus(false, "Error crítico");
+        console.error(`Error crítico al intentar conectar a ${broker.name}:`, error);
         
-        // Mostrar mensaje de error en el loader
-        const loaderText = document.querySelector('.loader-text');
-        loaderText.textContent = `Error: ${error.message}`;
-        loaderText.className = 'loader-text error-text';
-        
-        // Reintentar conexión
-        setTimeout(() => {
-          if (!mqttConnected) {
-            initMQTT();
-          }
-        }, 5000);
+        // Intentar con el siguiente broker
+        currentBrokerIndex++;
+        setTimeout(tryConnectToCurrentBroker, 2000);
       }
     }
     
-    // Verificación robusta de la biblioteca Paho
-    function checkPahoReady() {
-      // Verificar si Paho está disponible
-      if (typeof Paho !== 'undefined' && typeof Paho.MQTT !== 'undefined') {
-        console.log("Paho MQTT está listo para usarse");
-        initMQTT();
-        return true;
+    // Inicializar conexión MQTT con múltiples brokers de respaldo
+    function initMQTT() {
+      if (!isPahoReady()) {
+        updateLoaderMessage("Esperando a que Paho MQTT se cargue...");
+        setTimeout(initMQTT, 500);
+        return;
       }
       
-      console.log("Paho MQTT no está disponible todavía. Reintentando en 500ms...");
-      setTimeout(checkPahoReady, 500);
-      return false;
+      updateLoaderMessage("Iniciando conexión a brokers MQTT...");
+      currentBrokerIndex = 0;
+      connectionAttempts = 0;
+      tryConnectToCurrentBroker();
     }
     
     // Actualizar el dashboard con los datos recibidos
@@ -955,4 +953,156 @@
     
     // Inicializar el joystick para móviles
     function initJoystick() {
-      if 
+      if (!isMobile) return;
+      
+      // Obtener referencias a la cámara
+      cameraRig = document.getElementById('camera-rig');
+      camera = document.getElementById('camera');
+      
+      if (!cameraRig || !camera) {
+        console.error("No se encontraron elementos de cámara");
+        return;
+      }
+      
+      // Configurar el joystick
+      const joystick = nipplejs.create({
+        zone: document.getElementById('joystick-container'),
+        size: 100,
+        threshold: 0.1,
+        color: 'rgba(0, 234, 255, 0.7)',
+        fadeTime: 250
+      });
+      
+      // Manejar el movimiento
+      joystick.on('move', (evt, data) => {
+        if (!cameraRig || !camera) return;
+        
+        const angle = data.angle.radian;
+        const force = data.force;
+        
+        // Calcular movimiento
+        const moveSpeed = 0.05 * force;
+        const dx = Math.sin(angle) * moveSpeed;
+        const dz = Math.cos(angle) * moveSpeed;
+        
+        // Actualizar posición
+        const currentPos = cameraRig.getAttribute('position');
+        cameraRig.setAttribute('position', {
+          x: currentPos.x - dx,
+          y: currentPos.y,
+          z: currentPos.z - dz
+        });
+        
+        // Actualizar dirección de la cámara
+        if (force > 0.1) {
+          camera.setAttribute('rotation', {
+            x: 0,
+            y: (angle * (180 / Math.PI) - 90) % 360,
+            z: 0
+          });
+        }
+      });
+      
+      // Detener movimiento cuando se suelta
+      joystick.on('end', () => {
+        if (camera && cameraRig) {
+          camera.setAttribute('rotation', { x: 0, y: 0, z: 0 });
+        }
+      });
+    }
+    
+    // Cambiar a modo VR
+    function enterVRMode() {
+      const scene = document.querySelector('a-scene');
+      if (scene && scene.enterVR) {
+        scene.enterVR();
+      }
+    }
+    
+    // Configurar eventos
+    function setupEventListeners() {
+      // Botón de VR
+      document.getElementById('vr-button').addEventListener('click', enterVRMode);
+      
+      // Selector de modo móvil
+      document.getElementById('3d-mode-btn').addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('3d-mode-btn').classList.add('active');
+        currentMode = '3d';
+      });
+      
+      document.getElementById('vr-mode-btn').addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('vr-mode-btn').classList.add('active');
+        currentMode = 'vr';
+        enterVRMode();
+      });
+      
+      // Controles de escritorio
+      document.getElementById('mode-3d').addEventListener('click', () => {
+        currentMode = '3d';
+      });
+      
+      document.getElementById('mode-vr').addEventListener('click', () => {
+        currentMode = 'vr';
+        enterVRMode();
+      });
+    }
+    
+    // Inicializar la aplicación
+    window.addEventListener('load', () => {
+      // Crear partículas de fondo
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = isMobile ? 30 : 60;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // Propiedades aleatorias
+        const size = Math.random() * 3 + 1;
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        const delay = Math.random() * 15;
+        const duration = Math.random() * 10 + 10;
+        
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${posX}%`;
+        particle.style.top = `${posY}%`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+        
+        particlesContainer.appendChild(particle);
+      }
+      
+      // Configurar interfaz para móviles
+      if (isMobile) {
+        document.getElementById('mobile-mode-selector').style.display = 'block';
+      }
+      
+      // Inicializar elementos
+      setupEventListeners();
+      initJoystick();
+      
+      // Verificar y esperar a que Paho esté listo
+      if (isPahoReady()) {
+        initMQTT();
+      } else {
+        // Intentar cargar Paho nuevamente si no está disponible
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js';
+        script.onload = function() {
+          console.log("Biblioteca Paho MQTT recargada");
+          initMQTT();
+        };
+        script.onerror = function() {
+          updateLoaderMessage("Error: No se pudo cargar la biblioteca MQTT.<br>Verifica tu conexión a internet.");
+          console.error("No se pudo cargar la biblioteca Paho MQTT");
+        };
+        document.head.appendChild(script);
+      }
+    });
+  </script>
+</body>
+</html>
