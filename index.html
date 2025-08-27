@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - MOVIMIENTO PERFECTO EN MÓVIL</title>
+  <title>HORUS STATION - DASHBOARD CORREGIDO</title>
   
-  <!-- Cargar A-Frame 1.4.2 con configuración óptima para móviles -->
+  <!-- Cargar A-Frame 1.4.2 CORRECTAMENTE -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   
   <!-- Cargar mqtt.js desde CDN -->
@@ -305,17 +305,6 @@
       font-weight: bold;
     }
     
-    /* Optimización para dispositivos de baja potencia (32 bits) */
-    .low-power-mode {
-      opacity: 0.95;
-    }
-    
-    .low-power-mode .sensor-card {
-      box-shadow: none;
-      border: none;
-      background: rgba(21, 37, 64, 0.8);
-    }
-    
     /* Overlay para solicitar permisos de orientación */
     .orientation-permission {
       position: fixed;
@@ -398,13 +387,14 @@
     <button class="orientation-btn" id="orientation-btn">Solicitar Permiso</button>
   </div>
 
-  <!-- Escena 3D -->
+  <!-- Escena 3D - CONFIGURACIÓN CORREGIDA PARA A-FRAME 1.4.2 -->
   <a-scene id="main-scene" embedded style="width: 100%; height: 100vh;" 
-           vr-mode-ui="enabled: true; enterVRButton: #vr-button; enterARButton: #ar-button; enterVRButton: .a-enter-vr-button"
-           device-orientation-permission-ui="enabled: true"
+           vr-mode-ui="enabled: true"
            loading-screen="dotsColor: #00eaff; backgroundColor: #000a1a">
+    
+    <!-- Configuración CORRECTA para A-Frame 1.4.2 -->
     <a-entity id="camera-rig" position="0 1.6 0">
-      <a-entity id="camera" camera="fov: 80; userHeight: 1.6" look-controls="pointerLockEnabled: false; reverseMouseDrag: false; touchEnabled: true; magicWindowTrackingEnabled: true; hmdEnabled: true">
+      <a-entity id="camera" camera="fov: 80" look-controls wasd-controls="acceleration: 20">
         <a-cursor 
           raycaster="objects: .sensor-card" 
           color="#00eaff" 
@@ -544,13 +534,12 @@
   <script>
     // Variables globales
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    let isLowPowerDevice = false;
     let mqttClient;
     let mqttConnected = false;
     let cameraRig, camera;
     let isVRMode = false;
     let joystick;
-    let movementSpeed = 0.05; // Velocidad de movimiento ajustada
+    let movementSpeed = 0.05;
     let isMoving = false;
     let vrPermissionRequested = false;
     
@@ -562,38 +551,6 @@
     const mobileHelp = document.getElementById('mobile-help');
     const orientationPermission = document.getElementById('orientation-permission');
     const orientationBtn = document.getElementById('orientation-btn');
-    
-    // Verificar si es un dispositivo de baja potencia (como PCs de 32 bits)
-    function checkLowPowerDevice() {
-      try {
-        // Intentar detectar dispositivos de baja potencia
-        const is32Bit = !window.performance || !window.performance.memory;
-        const isLowMemory = navigator.deviceMemory && navigator.deviceMemory < 2;
-        
-        isLowPowerDevice = is32Bit || isLowMemory;
-        
-        if (isLowPowerDevice) {
-          console.log("Dispositivo de baja potencia detectado - activando modo optimizado");
-          document.body.classList.add('low-power-mode');
-          
-          // Ajustar configuración para dispositivos de baja potencia
-          movementSpeed = 0.02; // Movimiento más lento para mejor control
-          
-          // Desactivar efectos visuales intensivos
-          const scene = document.querySelector('a-scene');
-          if (scene) {
-            scene.setAttribute('renderer', 'antialias: false; sortObjects: false');
-          }
-        }
-        
-        return isLowPowerDevice;
-      } catch (e) {
-        // Si hay errores al verificar, asumimos que es un dispositivo antiguo
-        isLowPowerDevice = true;
-        document.body.classList.add('low-power-mode');
-        return true;
-      }
-    }
     
     // Actualizar estado de conexión
     function updateConnectionStatus(connected, message = "") {
@@ -627,7 +584,6 @@
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         orientationPermission.style.display = 'flex';
       } else {
-        // El navegador no requiere permiso explícito
         initVR();
       }
     }
@@ -638,11 +594,8 @@
       vrPermissionRequested = true;
       
       const scene = document.querySelector('a-scene');
-      if (scene) {
-        // Forzar la entrada en modo VR
-        if (scene.enterVR) {
-          scene.enterVR();
-        }
+      if (scene && scene.enterVR) {
+        scene.enterVR();
       }
     }
     
@@ -669,7 +622,7 @@
       joystick = nipplejs.create({
         zone: document.getElementById('joystick-container'),
         size: 110,
-        threshold: 0.2,  // Aumentado para evitar movimientos accidentales
+        threshold: 0.2,
         color: 'rgba(0, 234, 255, 0.7)',
         fadeTime: 250,
         position: {left: '50%', top: '50%'}
@@ -682,8 +635,8 @@
         const angle = data.angle.radian;
         const force = data.force;
         
-        // Ajustar velocidad de movimiento para mayor comodidad
-        const moveSpeed = movementSpeed * force * 1.5; // Aumentado para mejor respuesta
+        // Ajustar velocidad de movimiento
+        const moveSpeed = movementSpeed * force * 1.5;
         const dx = Math.sin(angle) * moveSpeed;
         const dz = Math.cos(angle) * moveSpeed;
         
@@ -802,7 +755,7 @@
       // Opciones de conexión
       const options = {
         clientId: "web-client-" + Math.random().toString(16).substr(2, 8),
-        protocolVersion: 4,  // MQTT v3.1.1
+        protocolVersion: 4,
         clean: true,
         connectTimeout: 10000,
         reconnectPeriod: 3000
@@ -886,9 +839,6 @@
     
     // Inicializar la aplicación
     window.addEventListener('load', () => {
-      // Verificar si es un dispositivo de baja potencia (PCs de 32 bits)
-      checkLowPowerDevice();
-      
       // Configurar interfaz para móviles
       if (isMobile) {
         // Configurar botón para solicitar permiso de orientación
@@ -910,24 +860,6 @@
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
           requestOrientationPermission();
         }
-        
-        // Ajustar configuración de A-Frame para móviles
-        setTimeout(() => {
-          const scene = document.querySelector('a-scene');
-          if (scene) {
-            // Ajustar parámetros de rendimiento para móviles
-            scene.setAttribute('renderer', 'antialias: true; sortObjects: true; maxCanvasWidth: 2048; maxCanvasHeight: 2048');
-            
-            // Asegurar que los controles táctiles están habilitados
-            const camera = document.getElementById('camera');
-            if (camera) {
-              camera.setAttribute('look-controls', 'touchEnabled: true; mouseEnabled: false; hmdEnabled: true');
-            }
-            
-            // Inicializar elementos
-            initJoystick();
-          }
-        }, 1000);
       }
       
       // Configurar eventos de VR
@@ -936,14 +868,6 @@
         scene.addEventListener('enter-vr', () => {
           isVRMode = true;
           adjustDashboardForVR();
-          
-          // En móviles, asegurar que los controles táctiles están habilitados en VR
-          if (isMobile) {
-            const camera = document.getElementById('camera');
-            if (camera) {
-              camera.setAttribute('look-controls', 'touchEnabled: true; mouseEnabled: false; hmdEnabled: true');
-            }
-          }
         });
         
         scene.addEventListener('exit-vr', () => {
@@ -961,15 +885,16 @@
         });
       }
       
-      // Conectar al broker HiveMQ
-      connectToHiveMQ();
-      
-      // Asegurar que la escena se adapte correctamente en móviles
+      // Inicializar elementos después de que A-Frame esté listo
       setTimeout(() => {
-        if (scene) {
-          scene.resize();
+        // Inicializar joystick para móviles
+        if (isMobile) {
+          initJoystick();
         }
-      }, 500);
+        
+        // Conectar al broker HiveMQ
+        connectToHiveMQ();
+      }, 1000);
     });
   </script>
 </body>
