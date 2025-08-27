@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD ESTELAR</title>
+  <title>HORUS STATION - DASHBOARD COMPLETO</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="js/aframe.js"></script>
@@ -645,10 +645,21 @@
         <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌀" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
-          <a-text value="VIENTO" color="#03A9F4" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="DIRECCIÓN" color="#03A9F4" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
         <a-text id="wind-value" value="--" color="#03A9F4" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
         <a-text value="°" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
+      </a-entity>
+      
+      <!-- VELOCIDAD DEL VIENTO - NUEVO ELEMENTO -->
+      <a-entity position="0 -2.3 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
+        <a-entity class="sensor-header">
+          <a-text value="💨" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="VEL. VIENTO" color="#4CAF50" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+        </a-entity>
+        <a-text id="wind-speed-value" value="--" color="#4CAF50" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="m/s" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
     </a-entity>
     
@@ -970,7 +981,7 @@
           const topic = message.destinationName;
           const payload = message.payloadString;
           
-          // Mapeo de topics a elementos
+          // Mapeo de topics a elementos - AHORA INCLUYE WIND SPEED
           const topicMap = {
             "horus/vvb/temperatura": "temp-value",
             "horus/vvb/humedad": "hum-value",
@@ -981,7 +992,7 @@
             "horus/vvb/pm25": "pm25-value",
             "horus/vvb/pm10": "pm10-value",
             "horus/vvb/wind_direction": "wind-value",
-            "horus/vvb/wind_speed": "wind-speed-value"
+            "horus/vvb/wind_speed": "wind-speed-value"  // ¡NUEVO ELEMENTO!
           };
           
           const elementId = topicMap[topic];
