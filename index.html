@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD COMPLETO</title>
+  <title>HORUS STATION - CONEXIÓN ESTABLE</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="js/aframe.js"></script>
@@ -544,10 +544,8 @@
     <a-light type="ambient" color="#555" intensity="0.6"></a-light>
     <a-light type="directional" color="#FFF" intensity="0.8" position="1 5 3"></a-light>
     
-    <!-- Suelo con rejilla mejorada -->
-    <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.15" transparent="true" 
-             material="shader: flat; color: #002244; opacity: 0.15; metalness: 0.1; roughness: 0.9; repeat: 10 10"
-             geometry="primitive: plane; width: 50; height: 50; segmentsWidth: 50; segmentsHeight: 50">
+    <!-- Suelo con rejilla mejorada - SIN PROPIEDADES NO SOPORTADAS -->
+    <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.15" transparent="true">
       <a-animation attribute="rotation" dur="60000" to="0 360 0" easing="linear" repeat="indefinite"></a-animation>
     </a-plane>
     
@@ -667,7 +665,7 @@
     <a-entity id="visual-effects">
       <!-- Nebulosa sutil -->
       <a-plane rotation="-90 0 0" width="100" height="100" 
-               material="shader: flat; src: #nebula; transparent: true; opacity: 0.2; side: double"
+               material="shader: flat; transparent: true; opacity: 0.2; side: double"
                position="0 25 0">
         <a-animation attribute="rotation" dur="120000" to="0 360 0" easing="linear" repeat="indefinite"></a-animation>
       </a-plane>
@@ -695,22 +693,6 @@
     <div class="loader-text">CONEXIÓN A HIVE MQ</div>
   </div>
 
-  <!-- Definición de texturas -->
-  <script type="x-shader/x-fragment" id="nebula">
-    precision mediump float;
-    uniform float time;
-    varying vec2 vUv;
-    
-    void main() {
-      vec2 center = vUv - vec2(0.5);
-      float dist = length(center);
-      float angle = atan(center.y, center.x);
-      float spiral = sin(dist * 10.0 - time * 0.5 + angle * 5.0);
-      float color = smoothstep(0.3, 0.31, spiral) * (1.0 - smoothstep(0.0, 0.5, dist));
-      gl_FragColor = vec4(0.0, 0.9, 1.0, color * 0.3);
-    }
-  </script>
-
   <script>
     // Variables globales
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -723,7 +705,8 @@
     let movementSpeed = 0.06;
     let vrPermissionRequested = false;
     
-    // Elementos UI
+    // Elementos UI - ¡CORREGIDO! Ahora definimos connectionStatusElement
+    const connectionStatusElement = document.getElementById('connection-status');
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
     const loader = document.getElementById('loader');
@@ -808,17 +791,17 @@
       }
     }
     
-    // Actualizar estado de conexión con animación
+    // Actualizar estado de conexión con animación - ¡CORREGIDO!
     function updateConnectionStatus(connected, message = "") {
       mqttConnected = connected;
       connectionLed.className = connected ? "led connected" : "led";
       connectionText.textContent = connected ? "Conectado" : (message || "Desconectado");
       
       if (connected) {
-        // Animación de conexión exitosa
-        connectionStatus.style.transform = 'scale(1.05)';
+        // Animación de conexión exitosa - ¡CORREGIDO! Ahora usamos connectionStatusElement
+        connectionStatusElement.style.transform = 'scale(1.05)';
         setTimeout(() => {
-          connectionStatus.style.transform = 'scale(1)';
+          connectionStatusElement.style.transform = 'scale(1)';
         }, 200);
         
         // Ocultar loader después de conexión
@@ -1014,11 +997,9 @@
             
             // Aplicar animación de cambio
             element.setAttribute('text', `value: ${newValue}`);
-            animateValueChange(elementId, newValue);
           } else {
             // Aplicar animación de cambio
             element.setAttribute('text', `value: ${payload}`);
-            animateValueChange(elementId, payload);
           }
         };
         
@@ -1046,20 +1027,6 @@
         console.error("Error al crear cliente MQTT:", error);
         setTimeout(connectToHiveMQ, 5000);
       }
-    }
-    
-    // Animar el cambio de valor
-    function animateValueChange(elementId, newValue) {
-      const element = document.getElementById(elementId);
-      if (!element) return;
-      
-      // Añadir clase de animación
-      element.classList.add('value-changing');
-      
-      // Quitar clase después de la animación
-      setTimeout(() => {
-        element.classList.remove('value-changing');
-      }, 500);
     }
     
     // Inicializar la aplicación
