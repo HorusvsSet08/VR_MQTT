@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD MINIMALISTA</title>
+  <title>HORUS STATION - DASHBOARD PARA ESCRITORIO Y MÓVIL</title>
   
   <!-- Cargar A-Frame 1.4.2 CORRECTAMENTE -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -43,7 +43,7 @@
       position: relative;
     }
     
-    /* Indicador de conexión minimalista */
+    /* Indicador de conexión */
     #connection-status {
       position: fixed;
       top: 15px;
@@ -86,7 +86,7 @@
       letter-spacing: 0.3px;
     }
     
-    /* Botón VR minimalista en esquina inferior derecha */
+    /* Botón VR - SOLO PARA MÓVILES */
     #vr-button {
       position: fixed;
       bottom: 20px;
@@ -107,6 +107,7 @@
       z-index: 1000;
       backdrop-filter: blur(5px);
       border: 1px solid rgba(0, 234, 255, 0.3);
+      display: none; /* Por defecto oculto */
     }
     
     #vr-button:hover {
@@ -115,7 +116,7 @@
       box-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
     }
     
-    /* Joystick minimalista */
+    /* Joystick - SOLO PARA MÓVILES */
     #joystick-container {
       position: fixed;
       left: 20px;
@@ -123,7 +124,7 @@
       width: 80px;
       height: 80px;
       z-index: 1000;
-      display: none;
+      display: none; /* Por defecto oculto */
     }
     
     /* Panel de datos 3D */
@@ -239,19 +240,49 @@
       transform: scale(1.05);
       box-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
     }
+    
+    /* Estilos específicos para escritorio */
+    @media (min-width: 769px) {
+      .sensor-card {
+        padding: 20px 25px;
+      }
+      
+      .sensor-icon {
+        font-size: 30px;
+        width: 45px;
+        height: 45px;
+      }
+      
+      .sensor-name {
+        font-size: 16px;
+      }
+      
+      .sensor-value {
+        font-size: 26px;
+      }
+      
+      .unit {
+        font-size: 16px;
+      }
+      
+      /* Dashboard más grande y más cerca para escritorio */
+      #dashboard {
+        transform: scale(1.2);
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- Indicador de conexión minimalista -->
+  <!-- Indicador de conexión -->
   <div id="connection-status">
     <span class="led" id="connection-led"></span>
     <span id="connection-text">Conectando...</span>
   </div>
   
-  <!-- Botón VR minimalista en esquina inferior derecha -->
+  <!-- Botón VR - SOLO PARA MÓVILES -->
   <button id="vr-button" title="Modo VR">🕶️</button>
   
-  <!-- Joystick minimalista -->
+  <!-- Joystick - SOLO PARA MÓVILES -->
   <div id="joystick-container" class="mobile-only"></div>
   
   <!-- Overlay para solicitar permisos de orientación -->
@@ -282,8 +313,8 @@
     <!-- Suelo -->
     <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.1" transparent="true"></a-plane>
     
-    <!-- Panel de datos - POSICIÓN MEJORADA -->
-    <a-entity id="dashboard" position="0 1.4 -2.8">
+    <!-- Panel de datos - POSICIÓN OPTIMIZADA PARA ESCRITORIO Y MÓVIL -->
+    <a-entity id="dashboard" position="0 1.3 -2.2">
       <!-- Temperatura -->
       <a-entity position="-1.7 0.6 0.1" class="sensor-card">
         <a-entity class="sensor-header">
@@ -353,6 +384,7 @@
   <script>
     // Variables globales
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let isDesktop = !isMobile;
     let mqttClient;
     let mqttConnected = false;
     let cameraRig, camera;
@@ -365,7 +397,8 @@
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
     const loader = document.getElementById('loader');
-    const mobileHelp = document.getElementById('mobile-help');
+    const vrButton = document.getElementById('vr-button');
+    const joystickContainer = document.getElementById('joystick-container');
     const orientationPermission = document.getElementById('orientation-permission');
     const orientationBtn = document.getElementById('orientation-btn');
     
@@ -413,8 +446,8 @@
     function initJoystick() {
       if (!isMobile) return;
       
-      // Mostrar joystick
-      document.getElementById('joystick-container').style.display = 'block';
+      // Mostrar joystick solo en móviles
+      joystickContainer.style.display = 'block';
       
       // Obtener referencias a la cámara
       cameraRig = document.getElementById('camera-rig');
@@ -427,7 +460,7 @@
       
       // Configurar el joystick
       joystick = nipplejs.create({
-        zone: document.getElementById('joystick-container'),
+        zone: joystickContainer,
         size: 70,
         threshold: 0.25,
         color: 'rgba(0, 234, 255, 0.5)',
@@ -469,7 +502,29 @@
     function restoreDashboardPosition() {
       const dashboard = document.getElementById('dashboard');
       if (dashboard) {
-        dashboard.setAttribute('position', '0 1.4 -2.8');
+        // Posición diferente para escritorio vs móvil
+        if (isDesktop) {
+          dashboard.setAttribute('position', '0 1.3 -2.2');
+        } else {
+          dashboard.setAttribute('position', '0 1.4 -2.8');
+        }
+      }
+    }
+    
+    // Configurar la interfaz según el dispositivo
+    function setupDeviceInterface() {
+      if (isMobile) {
+        // Mostrar botón VR solo en móviles
+        vrButton.style.display = 'flex';
+        
+        // Inicializar joystick para móviles
+        initJoystick();
+      } else {
+        // En escritorio, asegurar que el dashboard está bien posicionado
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+          dashboard.setAttribute('position', '0 1.3 -2.2');
+        }
       }
     }
     
@@ -550,8 +605,11 @@
     
     // Inicializar la aplicación
     window.addEventListener('load', () => {
+      // Configurar interfaz según el dispositivo
+      setupDeviceInterface();
+      
       // Configurar botón VR
-      document.getElementById('vr-button').addEventListener('click', () => {
+      vrButton.addEventListener('click', () => {
         if (isMobile && !vrPermissionRequested) {
           requestOrientationPermission();
         } else {
@@ -589,11 +647,6 @@
           isVRMode = false;
           restoreDashboardPosition();
         });
-      }
-      
-      // Inicializar joystick para móviles
-      if (isMobile) {
-        setTimeout(initJoystick, 500);
       }
       
       // Conectar al broker HiveMQ
