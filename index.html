@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD CON BIBLIOTECAS LOCALES</title>
+  <title>HORUS STATION - DASHBOARD CON PAHO.MQTT</title>
   
   <!-- Cargar A-Frame 1.4.2 desde carpeta local -->
-  <script src="js/aframe.min.js"></script>
+  <script src="js/aframe.js"></script>
   
-  <!-- Cargar mqtt.js desde carpeta local -->
-  <script src="js/mqtt.min.js"></script>
+  <!-- Cargar paho.js desde carpeta local -->
+  <script src="js/paho.js"></script>
   
   <!-- Biblioteca para el joystick desde carpeta local -->
-  <script src="js/nipplejs.min.js"></script>
+  <script src="js/nipple.js"></script>
   
   <style>
     :root {
@@ -528,38 +528,31 @@
       }
     }
     
-    // Conectar al broker HiveMQ
+    // Conectar al broker HiveMQ usando PAHO.MQTT
     function connectToHiveMQ() {
-      // URL del broker HiveMQ
-      const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
+      // URL del broker HiveMQ (Paho usa puerto 8000 para WebSocket)
+      const brokerUrl = "broker.hivemq.com";
+      const brokerPort = 8000; // WebSocket port
       
-      // Opciones de conexión
-      const options = {
-        clientId: "web-client-" + Math.random().toString(16).substr(2, 8),
-        protocolVersion: 4,
-        clean: true,
-        connectTimeout: 10000,
-        reconnectPeriod: 3000
-      };
+      // Generar un ID de cliente único
+      const clientId = "web-client-" + Math.random().toString(16).substr(2, 8);
       
       try {
-        // Crear cliente MQTT
-        mqttClient = mqtt.connect(brokerUrl, options);
+        // Crear cliente MQTT usando Paho
+        mqttClient = new Paho.MQTT.Client(brokerUrl, brokerPort, clientId);
         
-        // Manejar conexión exitosa
-        mqttClient.on("connect", () => {
-          updateConnectionStatus(true, "Conectado");
-          mqttClient.subscribe("horus/#", (err) => {
-            if (!err) {
-              console.log("Suscrito a horus/#");
-            }
-          });
-        });
+        // Configurar callbacks
+        mqttClient.onConnectionLost = (responseObject) => {
+          console.log("Conexión perdida:", responseObject.errorMessage);
+          updateConnectionStatus(false, "Desconectado");
+          
+          // Intentar reconectar después de 5 segundos
+          setTimeout(connectToHiveMQ, 5000);
+        };
         
-        // Manejar mensajes recibidos
-        mqttClient.on("message", (topic, payload) => {
-          const value = payload.toString().trim();
-          if (!value) return;
+        mqttClient.onMessageArrived = (message) => {
+          const topic = message.destinationName;
+          const payload = message.payloadString;
           
           // Mapeo de topics a elementos
           const topicMap = {
@@ -579,23 +572,30 @@
           
           // Actualizar el valor
           if (topic === "horus/vvb/lluvia") {
-            const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(value.toLowerCase());
+            const raining = ["1", "true", "si", "yes", "sí", "rain"].includes(payload.toLowerCase());
             element.setAttribute('text', `value: ${raining ? 'sí' : 'no'}`);
           } else {
-            element.setAttribute('text', `value: ${value}`);
+            element.setAttribute('text', `value: ${payload}`);
           }
-        });
+        };
         
-        // Manejar errores
-        mqttClient.on("error", (err) => {
-          console.error("Error MQTT:", err);
-        });
+        // Manejar conexión exitosa
+        const connectOptions = {
+          onSuccess: () => {
+            updateConnectionStatus(true, "Conectado");
+            mqttClient.subscribe("horus/#", {qos: 0});
+            console.log("Suscrito a horus/#");
+          },
+          onFailure: (error) => {
+            console.error("Error al conectar:", error);
+            updateConnectionStatus(false, "Error de conexión");
+            setTimeout(connectToHiveMQ, 5000);
+          },
+          timeout: 3
+        };
         
-        // Manejar cierre de conexión
-        mqttClient.on("close", () => {
-          updateConnectionStatus(false, "Desconectado");
-          setTimeout(connectToHiveMQ, 5000);
-        });
+        // Conectar
+        mqttClient.connect(connectOptions);
         
       } catch (error) {
         console.error("Error al crear cliente MQTT:", error);
