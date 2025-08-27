@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD CLARO CON PARTÍCULAS</title>
+  <title>HORUS STATION - MÓVIL OPTIMIZADO</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="js/aframe.js"></script>
@@ -20,15 +20,14 @@
       --primary-glow: #00ffff33;
       --secondary: #7e57c2;
       --dark-bg: #000a1a;
-      --card-bg: #1a3355; /* Más claro que antes */
-      --dashboard-bg: rgba(15, 45, 85, 0.88); /* Más claro que antes */
-      --text: #e0e0e0;
-      --text-secondary: #d0d0d0; /* Más claro que antes */
+      --card-bg: #1d3a5d;
+      --dashboard-bg: rgba(20, 50, 90, 0.9);
+      --text: #f0f0f0;
+      --text-secondary: #e0e0e0;
       --border-radius: 12px;
       --transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-      --shadow: 0 8px 20px rgba(0, 10, 30, 0.4);
-      --glow: 0 0 15px rgba(0, 234, 255, 0.5);
-      --inner-shadow: inset 0 3px 12px rgba(0, 5, 20, 0.6);
+      --shadow: 0 6px 16px rgba(0, 10, 30, 0.35);
+      --inner-shadow: inset 0 3px 10px rgba(0, 5, 20, 0.5);
       --hover-scale: 1.02;
     }
     
@@ -37,6 +36,8 @@
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      margin: 0;
+      padding: 0;
     }
     
     body {
@@ -50,20 +51,29 @@
       cursor: default;
     }
     
-    /* Indicador de conexión estilizado */
+    /* Eliminar completamente cualquier elemento residual de A-Frame */
+    .a-enter-vr, .a-canvas, .a-loader, .a-enter-ar, .a-fullscreen, .a-no-cursor, .a-cursor {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
+    
+    /* Indicador de conexión optimizado para móvil */
     #connection-status {
       position: fixed;
       top: 15px;
       left: 15px;
       z-index: 1000;
       padding: 8px 12px;
-      background: rgba(0, 15, 40, 0.8);
+      background: rgba(0, 15, 40, 0.85);
       border-radius: 20px;
       display: flex;
       align-items: center;
       gap: 8px;
       border: 1px solid rgba(0, 234, 255, 0.3);
       backdrop-filter: blur(5px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
     
     .led {
@@ -105,24 +115,24 @@
       letter-spacing: 0.3px;
     }
     
-    /* Botón VR - SOLO PARA MÓVILES */
+    /* Botón VR - SOLO PARA MÓVILES - OPTIMIZADO */
     #vr-button {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 45px;
-      height: 45px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       background: rgba(0, 234, 255, 0.2);
       color: var(--primary);
       border: none;
-      font-size: 18px;
+      font-size: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
+      box-shadow: 0 0 12px rgba(0, 234, 255, 0.4);
       cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.3s ease;
       z-index: 1000;
       backdrop-filter: blur(5px);
       border: 1px solid rgba(0, 234, 255, 0.3);
@@ -130,102 +140,85 @@
     }
     
     #vr-button:hover {
-      transform: scale(1.1);
+      transform: scale(1.15);
       background: rgba(0, 234, 255, 0.3);
-      box-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+      box-shadow: 0 0 18px rgba(0, 234, 255, 0.6);
     }
     
-    /* Joystick REALISTA - SOLO PARA MÓVILES */
+    /* Joystick REALISTA - SOLO PARA MÓVILES - TAMAÑO ÓPTIMO */
     #joystick-container {
       position: fixed;
-      left: 20px;
-      bottom: 20px;
-      width: 80px;
-      height: 80px;
+      left: 25px;
+      bottom: 25px;
+      width: 90px;
+      height: 90px;
       z-index: 1000;
       display: none;
     }
     
-    /* Panel de datos 3D - DISEÑO LIMPIO Y CLARO */
+    /* Panel de datos 3D - DISEÑO PARA MÓVIL */
     .sensor-card {
       position: relative;
       overflow: hidden;
       border-radius: var(--border-radius);
       background: var(--card-bg);
-      padding: 15px 18px;
+      padding: 16px 20px;
       text-align: center;
-      box-shadow: var(--inner-shadow), 0 6px 15px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--inner-shadow), 0 5px 12px rgba(0, 0, 0, 0.18);
       transition: var(--transition);
-      border: 1px solid rgba(0, 234, 255, 0.15);
+      border: 1px solid rgba(0, 234, 255, 0.12);
       transform-style: preserve-3d;
       perspective: 1000px;
     }
     
     .sensor-card:hover {
       transform: translateY(-5px) scale(var(--hover-scale));
-      box-shadow: var(--inner-shadow), 0 10px 25px rgba(0, 100, 200, 0.35);
+      box-shadow: var(--inner-shadow), 0 8px 20px rgba(0, 100, 200, 0.3);
       border-color: var(--primary);
     }
     
     .sensor-icon {
-      font-size: 26px;
-      width: 40px;
-      height: 40px;
+      font-size: 28px;
+      width: 44px;
+      height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 71, 119, 0.2);
+      background: rgba(0, 71, 119, 0.25);
       border-radius: 10px;
-      margin: 0 auto 8px;
-      border: 1px solid rgba(0, 234, 255, 0.2);
+      margin: 0 auto 10px;
+      border: 1px solid rgba(0, 234, 255, 0.25);
     }
     
     .sensor-name {
       color: var(--text-secondary);
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 500;
       letter-spacing: 0.3px;
-      margin-bottom: 6px;
+      margin-bottom: 7px;
       text-transform: uppercase;
     }
     
     .sensor-value {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
       color: var(--primary);
       line-height: 1.2;
-      text-shadow: 0 0 8px var(--primary-glow);
+      text-shadow: 0 0 6px var(--primary-glow);
       transition: var(--transition);
     }
     
     .unit {
-      font-size: 15px;
+      font-size: 16px;
       color: var(--text-secondary);
       font-weight: 400;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     
-    /* Efecto de brillo en las tarjetas */
-    .glow-effect {
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      background: radial-gradient(circle, var(--primary), transparent 70%);
-      opacity: 0.08;
-      pointer-events: none;
-      animation: glow-move 8s infinite alternate;
-      z-index: 0;
-    }
-    
-    @keyframes glow-move {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(10px, 10px); }
-    }
-    
-    /* Partículas en el fondo */
+    /* Partículas en el fondo - OPTIMIZADAS PARA MÓVIL */
     .background-particle {
-      position: absolute;
+      position: fixed;
       border-radius: 50%;
       pointer-events: none;
       z-index: -1;
@@ -248,8 +241,8 @@
     }
     
     .loader-spinner {
-      width: 50px;
-      height: 50px;
+      width: 55px;
+      height: 55px;
       border: 4px solid rgba(0, 234, 255, 0.3);
       border-radius: 50%;
       border-top-color: var(--primary);
@@ -263,13 +256,13 @@
     
     .loader-text {
       color: var(--primary);
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 600;
       letter-spacing: 1px;
       text-shadow: 0 0 8px var(--primary-glow);
     }
     
-    /* Overlay para solicitar permisos de orientación */
+    /* Overlay para solicitar permisos de orientación - MÁS GRANDE PARA MÓVIL */
     .orientation-permission {
       position: fixed;
       top: 0;
@@ -282,63 +275,70 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 25px;
       text-align: center;
     }
     
     .orientation-permission h3 {
       color: var(--primary);
-      margin-bottom: 12px;
-      font-size: 18px;
+      margin-bottom: 15px;
+      font-size: 20px;
     }
     
     .orientation-permission p {
-      margin-bottom: 15px;
-      font-size: 14px;
+      margin-bottom: 20px;
+      font-size: 15px;
       color: #a0a0a0;
-      max-width: 280px;
-      line-height: 1.4;
+      max-width: 300px;
+      line-height: 1.5;
     }
     
     .orientation-btn {
       background: var(--primary);
       color: #000;
       border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-size: 14px;
+      padding: 12px 25px;
+      border-radius: 25px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.3s ease;
+      box-shadow: 0 0 12px rgba(0, 234, 255, 0.5);
     }
     
     .orientation-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+      transform: scale(1.08);
+      box-shadow: 0 0 18px rgba(0, 234, 255, 0.7);
     }
     
-    /* Estilos específicos para escritorio */
-    @media (min-width: 769px) {
+    /* Estilos específicos para móviles */
+    @media (max-width: 768px) {
       .sensor-card {
-        padding: 18px 22px;
+        padding: 14px 18px;
       }
       
       .sensor-icon {
-        font-size: 30px;
-        width: 45px;
-        height: 45px;
+        font-size: 26px;
+        width: 40px;
+        height: 40px;
       }
       
       .sensor-name {
-        font-size: 16px;
+        font-size: 14px;
       }
       
       .sensor-value {
-        font-size: 26px;
+        font-size: 22px;
       }
       
       .unit {
-        font-size: 16px;
+        font-size: 15px;
+      }
+      
+      /* Ajustar posición del dashboard para móviles */
+      #dashboard {
+        position: absolute;
+        transform: scale(0.9);
       }
     }
   </style>
@@ -381,11 +381,10 @@
       </a-entity>
     </a-entity>
     
-    <!-- Panel de datos - DISEÑO LIMPIO Y VISUALMENTE CLARO -->
-    <a-entity id="dashboard" position="0 0 -2.0" rotation="0 0 0">
+    <!-- Panel de datos - DISEÑO OPTIMIZADO PARA MÓVIL -->
+    <a-entity id="dashboard" position="0 0 -2.2" rotation="0 0 0">
       <!-- Temperatura -->
       <a-entity position="-1.8 0.8 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌡️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="TEMP" color="#FF5722" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -396,7 +395,6 @@
       
       <!-- Humedad -->
       <a-entity position="-0.6 0.8 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="💧" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="HUM" color="#2196F3" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -407,7 +405,6 @@
       
       <!-- Presión -->
       <a-entity position="0.6 0.8 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🔽" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PRES" color="#9E9E9E" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -418,7 +415,6 @@
       
       <!-- Altitud -->
       <a-entity position="-1.8 0 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="⛰️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="ALT" color="#673AB7" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -429,7 +425,6 @@
       
       <!-- Gas -->
       <a-entity position="-0.6 0 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="⛽" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="GAS" color="#FFEB3B" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -440,7 +435,6 @@
       
       <!-- Lluvia -->
       <a-entity position="0.6 0 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌧️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="LLUVIA" color="#2196F3" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -450,7 +444,6 @@
       
       <!-- PM2.5 -->
       <a-entity position="-1.8 -0.8 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PM2.5" color="#9C27B0" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -461,7 +454,6 @@
       
       <!-- PM10 -->
       <a-entity position="-0.6 -0.8 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PM10" color="#673AB7" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -472,7 +464,6 @@
       
       <!-- Dirección del Viento -->
       <a-entity position="0.6 -0.8 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌀" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="VIENTO" color="#03A9F4" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -483,7 +474,6 @@
       
       <!-- Velocidad del Viento -->
       <a-entity position="-1.8 -1.6 0.1" class="sensor-card">
-        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="💨" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="VEL. VIENTO" color="#4CAF50" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -525,37 +515,41 @@
     const orientationPermission = document.getElementById('orientation-permission');
     const orientationBtn = document.getElementById('orientation-btn');
     
-    // Crear partículas en el fondo
+    // Crear partículas en el fondo - OPTIMIZADO PARA MÓVIL
     function createBackgroundParticles() {
       const container = document.getElementById('background-particles');
-      const particleCount = 50; // Número reducido de partículas para no saturar
+      const particleCount = isMobile ? 20 : 30; // Menos partículas en móviles
+      
+      // Eliminar cualquier partícula existente primero
+      container.innerHTML = '';
       
       for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'background-particle';
         
-        // Propiedades aleatorias
-        const size = Math.random() * 3 + 1;
+        // Propiedades aleatorias optimizadas para móviles
+        const size = Math.random() * (isMobile ? 3 : 4) + 1;
         const x = Math.random() * 100;
         const y = Math.random() * 100;
         const opacity = Math.random() * 0.3 + 0.1;
-        const color = Math.random() > 0.5 ? 'rgba(0, 234, 255, 0.5)' : 'rgba(126, 87, 194, 0.5)';
-        const speed = Math.random() * 0.5 + 0.1;
-        const direction = Math.random() * 360;
+        const color = Math.random() > 0.7 ? 
+          `rgba(0, 234, 255, ${opacity})` : 
+          `rgba(126, 87, 194, ${opacity})`;
+        const speed = Math.random() * (isMobile ? 0.5 : 0.8) + 0.1;
         
         // Estilos
         particle.style.width = `${size}px`;
         particle.style.height = `${size}px`;
         particle.style.left = `${x}%`;
         particle.style.top = `${y}%`;
-        particle.style.opacity = opacity;
         particle.style.backgroundColor = color;
+        particle.style.opacity = opacity;
         
-        // Guardar propiedades para la animación
+        // Guardar propiedades para animación
         particle.dataset.speed = speed;
-        particle.dataset.direction = direction;
         particle.dataset.x = x;
         particle.dataset.y = y;
+        particle.dataset.direction = Math.random() * 360;
         
         container.appendChild(particle);
       }
@@ -564,7 +558,7 @@
       animateParticles();
     }
     
-    // Animar las partículas
+    // Animar las partículas - OPTIMIZADO PARA MÓVIL
     function animateParticles() {
       const particles = document.querySelectorAll('.background-particle');
       
@@ -574,9 +568,10 @@
         const speed = parseFloat(particle.dataset.speed);
         const direction = parseFloat(particle.dataset.direction);
         
-        // Calcular nuevo movimiento
-        x += Math.cos(direction * Math.PI / 180) * speed;
-        y += Math.sin(direction * Math.PI / 180) * speed;
+        // Calcular nuevo movimiento (más lento en móviles)
+        const multiplier = isMobile ? 0.5 : 1;
+        x += Math.cos(direction * Math.PI / 180) * speed * multiplier;
+        y += Math.sin(direction * Math.PI / 180) * speed * multiplier;
         
         // Mantener dentro de los límites
         if (x > 100) x = 0;
@@ -595,6 +590,43 @@
       
       // Continuar animación
       requestAnimationFrame(animateParticles);
+    }
+    
+    // Eliminar cualquier elemento residual de A-Frame - MÁS AGRESIVO
+    function removeAFrameResiduals() {
+      // Asegurar que los elementos de A-Frame están ocultos
+      const aframeElements = document.querySelectorAll('.a-enter-vr, .a-canvas, .a-loader, .a-enter-ar, .a-fullscreen, .a-no-cursor, .a-cursor');
+      aframeElements.forEach(element => {
+        element.style.display = 'none';
+        element.style.opacity = '0';
+        element.style.pointerEvents = 'none';
+        element.style.visibility = 'hidden';
+      });
+      
+      // Eliminar cualquier estilo residual
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .a-enter-vr, .a-canvas, .a-loader, .a-enter-ar, .a-fullscreen, .a-no-cursor, .a-cursor {
+          display: none !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          visibility: hidden !important;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Forzar eliminación de cualquier elemento residual
+      setTimeout(() => {
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(element => {
+          if (element.className && 
+              (element.className.includes('a-') || 
+               element.className.includes('aframe'))) {
+            element.style.display = 'none';
+            element.style.opacity = '0';
+          }
+        });
+      }, 1000);
     }
     
     // Actualizar estado de conexión con animación
@@ -623,11 +655,31 @@
       }
     }
     
-    // Solicitar permiso de orientación para VR en móviles
+    // Solicitar permiso de orientación para VR en móviles - MÉTODO MEJORADO
     function requestOrientationPermission() {
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // Si es iOS, usar el método específico para iOS
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         orientationPermission.style.display = 'flex';
+        return;
+      }
+      
+      // Para Android y otros, intentar solicitar permiso directamente
+      if (typeof DeviceOrientationEvent !== 'undefined' && 
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              initVR();
+            } else {
+              orientationPermission.style.display = 'flex';
+            }
+          })
+          .catch(error => {
+            console.error("Error al solicitar permiso:", error);
+            orientationPermission.style.display = 'flex';
+          });
       } else {
+        // Si no hay soporte para requestPermission, intentar directamente
         initVR();
       }
     }
@@ -639,11 +691,24 @@
       
       const scene = document.querySelector('a-scene');
       if (scene && scene.enterVR) {
-        scene.enterVR();
+        scene.enterVR()
+          .then(() => {
+            console.log("Entró a VR exitosamente");
+            isVRMode = true;
+          })
+          .catch(error => {
+            console.error("Error al entrar a VR:", error);
+            isVRMode = false;
+            orientationPermission.style.display = 'flex';
+          });
+      } else {
+        console.error("No se encontró la escena de A-Frame");
+        isVRMode = false;
+        orientationPermission.style.display = 'flex';
       }
     }
     
-    // Inicializar el joystick REALISTA para móviles
+    // Inicializar el joystick REALISTA para móviles - MÁS GRANDE Y SENSIBLE
     function initJoystick() {
       if (!isMobile) return;
       
@@ -662,11 +727,15 @@
       // Configurar el joystick con apariencia REALISTA
       joystick = nipplejs.create({
         zone: joystickContainer,
-        size: 70,
-        threshold: 0.25,
-        color: 'rgba(0, 234, 255, 0.5)',
-        fadeTime: 250,
-        position: {left: '50%', top: '50%'}
+        size: 85,  // Un poco más grande para mejor usabilidad en móviles
+        threshold: 0.2,  // Umbral ligeramente menor para mejor sensibilidad
+        color: 'rgba(0, 234, 255, 0.6)',
+        fadeTime: 200,
+        position: {left: '50%', top: '50%'},
+        dynamic: true,
+        restOpacity: 0.4,
+        lockY: false,
+        mode: 'dynamic'
       });
       
       // Manejar el movimiento del joystick REALISTA
@@ -676,8 +745,8 @@
         const angle = data.angle.radian;
         const force = data.force;
         
-        // Ajustar velocidad de movimiento para mejor control
-        const moveSpeed = movementSpeed * force * 1.8;
+        // Ajustar velocidad de movimiento para mejor control en móviles
+        const moveSpeed = movementSpeed * force * 2.0;
         const dx = Math.sin(angle) * moveSpeed;
         const dz = Math.cos(angle) * moveSpeed;
         
@@ -698,12 +767,16 @@
       });
     }
     
-    // Ajustar posición del dashboard para VR
+    // Ajustar posición del dashboard para VR en móviles
     function adjustDashboardForVR() {
       const dashboard = document.getElementById('dashboard');
       if (dashboard) {
-        // Dashboard ligeramente más alto y más alejado en VR
-        dashboard.setAttribute('position', '0 0 -1.5');
+        // Ajustar posición para móviles en VR
+        if (isMobile) {
+          dashboard.setAttribute('position', '0 0 -1.7');
+        } else {
+          dashboard.setAttribute('position', '0 0 -1.5');
+        }
       }
     }
     
@@ -711,13 +784,12 @@
     function restoreDashboardPosition() {
       const dashboard = document.getElementById('dashboard');
       if (dashboard) {
-        // Posición ajustada para escritorio vs móvil
-        if (isDesktop) {
+        // Posición ajustada para móviles
+        if (isMobile) {
+          dashboard.setAttribute('position', '0 0 -2.2');
+        } else {
           // Dashboard más cerca para escritorio
           dashboard.setAttribute('position', '0 0 -2.0');
-        } else {
-          // Dashboard más cerca para móviles
-          dashboard.setAttribute('position', '0 0 -2.5');
         }
       }
     }
@@ -730,6 +802,12 @@
         
         // Inicializar joystick para móviles
         initJoystick();
+        
+        // Ajustar tamaño del dashboard para móviles
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+          dashboard.setAttribute('position', '0 0 -2.2');
+        }
       }
     }
     
@@ -822,6 +900,9 @@
     
     // Inicializar la aplicación
     window.addEventListener('load', () => {
+      // Eliminar cualquier elemento residual de A-Frame
+      removeAFrameResiduals();
+      
       // Crear partículas en el fondo
       createBackgroundParticles();
       
@@ -835,14 +916,23 @@
         } else {
           const scene = document.querySelector('a-scene');
           if (scene && scene.enterVR) {
-            scene.enterVR();
+            scene.enterVR()
+              .then(() => {
+                isVRMode = true;
+                adjustDashboardForVR();
+              })
+              .catch(error => {
+                console.error("Error al entrar a VR:", error);
+                orientationPermission.style.display = 'flex';
+              });
           }
         }
       });
       
       // Configurar botón de permisos
       orientationBtn.addEventListener('click', () => {
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          // Para iOS, necesitamos un evento de usuario para solicitar permisos
           DeviceOrientationEvent.requestPermission()
             .then(permissionState => {
               if (permissionState === 'granted') {
@@ -872,6 +962,38 @@
       // Conectar al broker HiveMQ
       connectToHiveMQ();
     });
+    
+    // Manejar la rotación del dispositivo para mejorar la experiencia VR
+    window.addEventListener('deviceorientation', function(event) {
+      // Solo procesar si estamos en VR y es un dispositivo móvil
+      if (isVRMode && isMobile) {
+        // Ajustar sensibilidad para móviles
+        const alpha = event.alpha * 0.7; // Menos sensible en el eje Z
+        const beta = event.beta * 0.8;  // Menos sensible en el eje X
+        const gamma = event.gamma * 0.8; // Menos sensible en el eje Y
+        
+        // Aplicar rotación a la cámara
+        if (camera) {
+          camera.setAttribute('rotation', {
+            x: beta,
+            y: alpha,
+            z: gamma
+          });
+        }
+      }
+    }, true);
+    
+    // Optimizar para el rendimiento en móviles
+    if (isMobile) {
+      // Reducir la tasa de fotogramas en móviles para ahorrar batería
+      AFRAME.scenes[0].setAttribute('rendering', 'fps: 60');
+      
+      // Desactivar sombras en móviles para mejor rendimiento
+      const lights = document.querySelectorAll('[light]');
+      lights.forEach(light => {
+        light.setAttribute('light', 'castShadow: false');
+      });
+    }
   </script>
 </body>
 </html>
