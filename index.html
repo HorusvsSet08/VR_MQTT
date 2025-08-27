@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - CONEXIÓN ESTABLE</title>
+  <title>HORUS STATION - DASHBOARD OPTIMIZADO</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="js/aframe.js"></script>
@@ -22,6 +22,7 @@
       --dark-bg: #000a1a;
       --card-bg: #0f1b30;
       --card-border: #004777;
+      --dashboard-bg: rgba(0, 15, 30, 0.7);
       --text: #e0e0e0;
       --text-secondary: #a0a0a0;
       --border-radius: 16px;
@@ -520,7 +521,7 @@
     <button class="orientation-btn" id="orientation-btn">Permitir</button>
   </div>
 
-  <!-- Escena 3D -->
+  <!-- Escena 3D - SIN CUADRADOS ARRIBA Y CON FONDO MEJORADO -->
   <a-scene embedded style="width: 100%; height: 100vh;" 
            vr-mode-ui="enabled: false"
            loading-screen="enabled: false">
@@ -544,10 +545,30 @@
     <a-light type="ambient" color="#555" intensity="0.6"></a-light>
     <a-light type="directional" color="#FFF" intensity="0.8" position="1 5 3"></a-light>
     
-    <!-- Suelo con rejilla mejorada - SIN PROPIEDADES NO SOPORTADAS -->
-    <a-plane rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.15" transparent="true">
-      <a-animation attribute="rotation" dur="60000" to="0 360 0" easing="linear" repeat="indefinite"></a-animation>
-    </a-plane>
+    <!-- SUELO MEJORADO - SIN TECHO Y CON REJILLA -->
+    <a-entity id="floor-entity">
+      <a-plane id="floor" rotation="-90 0 0" width="50" height="50" color="#002244" opacity="0.25" transparent="true">
+        <a-animation attribute="rotation" dur="60000" to="0 360 0" easing="linear" repeat="indefinite"></a-animation>
+      </a-plane>
+      
+      <!-- Rejilla para el suelo -->
+      <a-entity position="0 0 0">
+        <a-entity geometry="primitive: plane; width: 50; height: 50; segmentsWidth: 50; segmentsHeight: 50" 
+                  material="shader: flat; src: #grid; transparent: true; opacity: 0.15; side: double"
+                  rotation="-90 0 0">
+          <a-animation attribute="rotation" dur="120000" to="0 360 0" easing="linear" repeat="indefinite"></a-animation>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+    
+    <!-- FONDO DEL DASHBOARD - PANEL TRANSLÚCIDO -->
+    <a-entity id="dashboard-background" 
+              geometry="primitive: circle; radius: 4.5; segments: 64" 
+              material="color: #000f25; opacity: 0.7; transparent: true; side: double"
+              rotation="-90 0 0"
+              position="0 1.6 -2.5">
+      <a-animation attribute="rotation" dur="30000" to="0 360 0" easing="linear" repeat="indefinite"></a-animation>
+    </a-entity>
     
     <!-- Panel de datos - DISEÑO FUTURISTA -->
     <a-entity id="dashboard" position="0 1.6 -2.5">
@@ -693,6 +714,27 @@
     <div class="loader-text">CONEXIÓN A HIVE MQ</div>
   </div>
 
+  <!-- Definición de texturas -->
+  <script type="x-shader/x-fragment" id="grid">
+    precision mediump float;
+    uniform float time;
+    
+    void main() {
+      vec2 uv = gl_FragCoord.xy / 50.0;
+      float grid = 0.0;
+      
+      // Líneas verticales
+      grid += smoothstep(0.99, 1.0, 1.0 - mod(uv.x, 1.0));
+      // Líneas horizontales
+      grid += smoothstep(0.99, 1.0, 1.0 - mod(uv.y, 1.0));
+      
+      // Brillo pulsante
+      grid *= 0.3 + 0.1 * sin(time * 2.0);
+      
+      gl_FragColor = vec4(0.0, 1.0, 1.0, grid);
+    }
+  </script>
+
   <script>
     // Variables globales
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -705,7 +747,7 @@
     let movementSpeed = 0.06;
     let vrPermissionRequested = false;
     
-    // Elementos UI - ¡CORREGIDO! Ahora definimos connectionStatusElement
+    // Elementos UI
     const connectionStatusElement = document.getElementById('connection-status');
     const connectionLed = document.getElementById('connection-led');
     const connectionText = document.getElementById('connection-text');
@@ -791,14 +833,14 @@
       }
     }
     
-    // Actualizar estado de conexión con animación - ¡CORREGIDO!
+    // Actualizar estado de conexión con animación
     function updateConnectionStatus(connected, message = "") {
       mqttConnected = connected;
       connectionLed.className = connected ? "led connected" : "led";
       connectionText.textContent = connected ? "Conectado" : (message || "Desconectado");
       
       if (connected) {
-        // Animación de conexión exitosa - ¡CORREGIDO! Ahora usamos connectionStatusElement
+        // Animación de conexión exitosa
         connectionStatusElement.style.transform = 'scale(1.05)';
         setTimeout(() => {
           connectionStatusElement.style.transform = 'scale(1)';
@@ -899,15 +941,24 @@
     // Ajustar posición del dashboard para VR
     function adjustDashboardForVR() {
       const dashboard = document.getElementById('dashboard');
+      const dashboardBg = document.getElementById('dashboard-background');
+      
       if (dashboard) {
         // Dashboard ligeramente más alto y más alejado en VR
         dashboard.setAttribute('position', '0 1.7 -1.9');
+      }
+      
+      if (dashboardBg) {
+        // Ajustar fondo del dashboard en VR
+        dashboardBg.setAttribute('position', '0 1.7 -1.9');
       }
     }
     
     // Restaurar posición del dashboard
     function restoreDashboardPosition() {
       const dashboard = document.getElementById('dashboard');
+      const dashboardBg = document.getElementById('dashboard-background');
+      
       if (dashboard) {
         // Posición ajustada para escritorio vs móvil
         if (isDesktop) {
@@ -916,6 +967,17 @@
         } else {
           // Dashboard más alto y más alejado
           dashboard.setAttribute('position', '0 1.7 -3.0');
+        }
+      }
+      
+      if (dashboardBg) {
+        // Posición ajustada para escritorio vs móvil
+        if (isDesktop) {
+          // Fondo del dashboard más alto y más alejado
+          dashboardBg.setAttribute('position', '0 1.6 -2.5');
+        } else {
+          // Fondo del dashboard más alto y más alejado
+          dashboardBg.setAttribute('position', '0 1.7 -3.0');
         }
       }
     }
@@ -931,9 +993,16 @@
       } else {
         // En escritorio, asegurar que el dashboard está bien posicionado
         const dashboard = document.getElementById('dashboard');
+        const dashboardBg = document.getElementById('dashboard-background');
+        
         if (dashboard) {
           // Dashboard más alto y más alejado
           dashboard.setAttribute('position', '0 1.6 -2.5');
+        }
+        
+        if (dashboardBg) {
+          // Fondo del dashboard más alto y más alejado
+          dashboardBg.setAttribute('position', '0 1.6 -2.5');
         }
       }
     }
