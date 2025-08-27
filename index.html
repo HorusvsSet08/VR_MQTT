@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - MÓVIL OPTIMIZADO</title>
+  <title>HORUS STATION - VISIBLE AL 100%</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="js/aframe.js"></script>
@@ -334,12 +334,6 @@
       .unit {
         font-size: 15px;
       }
-      
-      /* Ajustar posición del dashboard para móviles */
-      #dashboard {
-        position: absolute;
-        transform: scale(0.9);
-      }
     }
   </style>
 </head>
@@ -363,14 +357,14 @@
     <button class="orientation-btn" id="orientation-btn">Permitir</button>
   </div>
 
-  <!-- Escena 3D - SIN ELEMENTOS NO DESEADOS -->
+  <!-- Escena 3D - POSICIONAMIENTO CORREGIDO -->
   <a-scene embedded style="width: 100%; height: 100vh;" 
            vr-mode-ui="enabled: false"
            loading-screen="enabled: false">
     
-    <!-- Configuración CORRECTA para A-Frame 1.4.2 -->
+    <!-- CONFIGURACIÓN CORREGIDA - POSICIÓN DE LA CÁMARA AJUSTADA -->
     <a-entity id="camera-rig" position="0 0 0">
-      <a-entity id="camera" camera="fov: 80" look-controls wasd-controls="acceleration: 20; fly: true">
+      <a-entity id="camera" camera="fov: 80; user-height: 0" look-controls>
         <a-cursor 
           raycaster="objects: .sensor-card" 
           color="#00eaff" 
@@ -381,10 +375,10 @@
       </a-entity>
     </a-entity>
     
-    <!-- Panel de datos - DISEÑO OPTIMIZADO PARA MÓVIL -->
-    <a-entity id="dashboard" position="0 0 -2.2" rotation="0 0 0">
+    <!-- Panel de datos - POSICIÓN AJUSTADA PARA VISIBILIDAD INMEDIATA -->
+    <a-entity id="dashboard" position="0 0 -1.5" rotation="0 0 0">
       <!-- Temperatura -->
-      <a-entity position="-1.8 0.8 0.1" class="sensor-card">
+      <a-entity position="-1.6 0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="🌡️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="TEMP" color="#FF5722" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -394,7 +388,7 @@
       </a-entity>
       
       <!-- Humedad -->
-      <a-entity position="-0.6 0.8 0.1" class="sensor-card">
+      <a-entity position="-0.5 0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="💧" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="HUM" color="#2196F3" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -404,7 +398,7 @@
       </a-entity>
       
       <!-- Presión -->
-      <a-entity position="0.6 0.8 0.1" class="sensor-card">
+      <a-entity position="0.6 0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="🔽" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PRES" color="#9E9E9E" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -414,7 +408,7 @@
       </a-entity>
       
       <!-- Altitud -->
-      <a-entity position="-1.8 0 0.1" class="sensor-card">
+      <a-entity position="-1.6 0 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="⛰️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="ALT" color="#673AB7" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -424,7 +418,7 @@
       </a-entity>
       
       <!-- Gas -->
-      <a-entity position="-0.6 0 0.1" class="sensor-card">
+      <a-entity position="-0.5 0 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="⛽" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="GAS" color="#FFEB3B" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -443,7 +437,7 @@
       </a-entity>
       
       <!-- PM2.5 -->
-      <a-entity position="-1.8 -0.8 0.1" class="sensor-card">
+      <a-entity position="-1.6 -0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PM2.5" color="#9C27B0" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -453,7 +447,7 @@
       </a-entity>
       
       <!-- PM10 -->
-      <a-entity position="-0.6 -0.8 0.1" class="sensor-card">
+      <a-entity position="-0.5 -0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PM10" color="#673AB7" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -463,7 +457,7 @@
       </a-entity>
       
       <!-- Dirección del Viento -->
-      <a-entity position="0.6 -0.8 0.1" class="sensor-card">
+      <a-entity position="0.6 -0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="🌀" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="VIENTO" color="#03A9F4" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -473,7 +467,7 @@
       </a-entity>
       
       <!-- Velocidad del Viento -->
-      <a-entity position="-1.8 -1.6 0.1" class="sensor-card">
+      <a-entity position="-1.6 -1.4 0.1" class="sensor-card">
         <a-entity class="sensor-header">
           <a-text value="💨" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="VEL. VIENTO" color="#4CAF50" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -484,13 +478,10 @@
     </a-entity>
   </a-scene>
 
-  <!-- Partículas en el fondo -->
-  <div id="background-particles"></div>
-  
   <!-- Loader de conexión minimalista -->
   <div class="loader" id="loader">
     <div class="loader-spinner"></div>
-    <div class="loader-text">CONEXIÓN A HIVE MQ</div>
+    <div class="loader-text">CARGANDO DASHBOARD</div>
   </div>
 
   <script>
@@ -514,83 +505,6 @@
     const joystickContainer = document.getElementById('joystick-container');
     const orientationPermission = document.getElementById('orientation-permission');
     const orientationBtn = document.getElementById('orientation-btn');
-    
-    // Crear partículas en el fondo - OPTIMIZADO PARA MÓVIL
-    function createBackgroundParticles() {
-      const container = document.getElementById('background-particles');
-      const particleCount = isMobile ? 20 : 30; // Menos partículas en móviles
-      
-      // Eliminar cualquier partícula existente primero
-      container.innerHTML = '';
-      
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'background-particle';
-        
-        // Propiedades aleatorias optimizadas para móviles
-        const size = Math.random() * (isMobile ? 3 : 4) + 1;
-        const x = Math.random() * 100;
-        const y = Math.random() * 100;
-        const opacity = Math.random() * 0.3 + 0.1;
-        const color = Math.random() > 0.7 ? 
-          `rgba(0, 234, 255, ${opacity})` : 
-          `rgba(126, 87, 194, ${opacity})`;
-        const speed = Math.random() * (isMobile ? 0.5 : 0.8) + 0.1;
-        
-        // Estilos
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        particle.style.left = `${x}%`;
-        particle.style.top = `${y}%`;
-        particle.style.backgroundColor = color;
-        particle.style.opacity = opacity;
-        
-        // Guardar propiedades para animación
-        particle.dataset.speed = speed;
-        particle.dataset.x = x;
-        particle.dataset.y = y;
-        particle.dataset.direction = Math.random() * 360;
-        
-        container.appendChild(particle);
-      }
-      
-      // Iniciar animación
-      animateParticles();
-    }
-    
-    // Animar las partículas - OPTIMIZADO PARA MÓVIL
-    function animateParticles() {
-      const particles = document.querySelectorAll('.background-particle');
-      
-      particles.forEach(particle => {
-        let x = parseFloat(particle.dataset.x);
-        let y = parseFloat(particle.dataset.y);
-        const speed = parseFloat(particle.dataset.speed);
-        const direction = parseFloat(particle.dataset.direction);
-        
-        // Calcular nuevo movimiento (más lento en móviles)
-        const multiplier = isMobile ? 0.5 : 1;
-        x += Math.cos(direction * Math.PI / 180) * speed * multiplier;
-        y += Math.sin(direction * Math.PI / 180) * speed * multiplier;
-        
-        // Mantener dentro de los límites
-        if (x > 100) x = 0;
-        if (x < 0) x = 100;
-        if (y > 100) y = 0;
-        if (y < 0) y = 100;
-        
-        // Actualizar posición
-        particle.style.left = `${x}%`;
-        particle.style.top = `${y}%`;
-        
-        // Actualizar datos
-        particle.dataset.x = x;
-        particle.dataset.y = y;
-      });
-      
-      // Continuar animación
-      requestAnimationFrame(animateParticles);
-    }
     
     // Eliminar cualquier elemento residual de A-Frame - MÁS AGRESIVO
     function removeAFrameResiduals() {
@@ -655,33 +569,9 @@
       }
     }
     
-    // Solicitar permiso de orientación para VR en móviles - MÉTODO MEJORADO
+    // Solicitar permiso de orientación para VR en móviles - MÉTODO SIMPLIFICADO
     function requestOrientationPermission() {
-      // Si es iOS, usar el método específico para iOS
-      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        orientationPermission.style.display = 'flex';
-        return;
-      }
-      
-      // Para Android y otros, intentar solicitar permiso directamente
-      if (typeof DeviceOrientationEvent !== 'undefined' && 
-          typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-          .then(permissionState => {
-            if (permissionState === 'granted') {
-              initVR();
-            } else {
-              orientationPermission.style.display = 'flex';
-            }
-          })
-          .catch(error => {
-            console.error("Error al solicitar permiso:", error);
-            orientationPermission.style.display = 'flex';
-          });
-      } else {
-        // Si no hay soporte para requestPermission, intentar directamente
-        initVR();
-      }
+      orientationPermission.style.display = 'flex';
     }
     
     // Inicializar VR después de obtener permisos
@@ -695,6 +585,12 @@
           .then(() => {
             console.log("Entró a VR exitosamente");
             isVRMode = true;
+            
+            // Ajustar posición para VR
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard) {
+              dashboard.setAttribute('position', '0 0 -1.2');
+            }
           })
           .catch(error => {
             console.error("Error al entrar a VR:", error);
@@ -708,7 +604,7 @@
       }
     }
     
-    // Inicializar el joystick REALISTA para móviles - MÁS GRANDE Y SENSIBLE
+    // Inicializar el joystick REALISTA para móviles - SIMPLIFICADO
     function initJoystick() {
       if (!isMobile) return;
       
@@ -727,8 +623,8 @@
       // Configurar el joystick con apariencia REALISTA
       joystick = nipplejs.create({
         zone: joystickContainer,
-        size: 85,  // Un poco más grande para mejor usabilidad en móviles
-        threshold: 0.2,  // Umbral ligeramente menor para mejor sensibilidad
+        size: 85,
+        threshold: 0.2,
         color: 'rgba(0, 234, 255, 0.6)',
         fadeTime: 200,
         position: {left: '50%', top: '50%'},
@@ -758,40 +654,6 @@
           z: currentPos.z - dz
         });
       });
-      
-      // Manejar cuando se suelta el joystick
-      joystick.on('end', () => {
-        if (camera && cameraRig) {
-          camera.setAttribute('rotation', { x: 0, y: 0, z: 0 });
-        }
-      });
-    }
-    
-    // Ajustar posición del dashboard para VR en móviles
-    function adjustDashboardForVR() {
-      const dashboard = document.getElementById('dashboard');
-      if (dashboard) {
-        // Ajustar posición para móviles en VR
-        if (isMobile) {
-          dashboard.setAttribute('position', '0 0 -1.7');
-        } else {
-          dashboard.setAttribute('position', '0 0 -1.5');
-        }
-      }
-    }
-    
-    // Restaurar posición del dashboard
-    function restoreDashboardPosition() {
-      const dashboard = document.getElementById('dashboard');
-      if (dashboard) {
-        // Posición ajustada para móviles
-        if (isMobile) {
-          dashboard.setAttribute('position', '0 0 -2.2');
-        } else {
-          // Dashboard más cerca para escritorio
-          dashboard.setAttribute('position', '0 0 -2.0');
-        }
-      }
     }
     
     // Configurar la interfaz según el dispositivo
@@ -802,20 +664,20 @@
         
         // Inicializar joystick para móviles
         initJoystick();
-        
-        // Ajustar tamaño del dashboard para móviles
-        const dashboard = document.getElementById('dashboard');
-        if (dashboard) {
-          dashboard.setAttribute('position', '0 0 -2.2');
-        }
+      }
+      
+      // Asegurar que el dashboard esté visible
+      const dashboard = document.getElementById('dashboard');
+      if (dashboard) {
+        dashboard.setAttribute('position', '0 0 -1.5');
       }
     }
     
-    // Conectar al broker HiveMQ usando PAHO.MQTT (CORREGIDO PARA USAR WSS)
+    // Conectar al broker HiveMQ usando PAHO.MQTT (SIMPLIFICADO)
     function connectToHiveMQ() {
-      // URL del broker HiveMQ - ¡CORREGIDO PARA USAR WSS!
+      // URL del broker HiveMQ
       const brokerUrl = "broker.hivemq.com";
-      const brokerPort = 8884; // Puerto WSS (WebSocket Secure) en lugar de 8000
+      const brokerPort = 8884;
       
       // Generar un ID de cliente único
       const clientId = "web-client-" + Math.random().toString(16).substr(2, 8);
@@ -837,7 +699,7 @@
           const topic = message.destinationName;
           const payload = message.payloadString;
           
-          // Mapeo de topics a elementos - INCLUYE TODOS LOS TOPICS
+          // Mapeo de topics a elementos
           const topicMap = {
             "horus/vvb/temperatura": "temp-value",
             "horus/vvb/humedad": "hum-value",
@@ -852,16 +714,10 @@
           };
           
           const elementId = topicMap[topic];
-          if (!elementId) {
-            console.log("Topic no manejado:", topic);
-            return;
-          }
+          if (!elementId) return;
           
           const element = document.getElementById(elementId);
-          if (!element) {
-            console.error("Elemento no encontrado para el topic:", topic);
-            return;
-          }
+          if (!element) return;
           
           // Actualizar el valor
           if (topic === "horus/vvb/lluvia") {
@@ -885,7 +741,6 @@
             setTimeout(connectToHiveMQ, 5000);
           },
           timeout: 3,
-          // ¡IMPORTANTE! Usar WSS en lugar de WS
           useSSL: true
         };
         
@@ -903,9 +758,6 @@
       // Eliminar cualquier elemento residual de A-Frame
       removeAFrameResiduals();
       
-      // Crear partículas en el fondo
-      createBackgroundParticles();
-      
       // Configurar interfaz según el dispositivo
       setupDeviceInterface();
       
@@ -919,7 +771,10 @@
             scene.enterVR()
               .then(() => {
                 isVRMode = true;
-                adjustDashboardForVR();
+                const dashboard = document.getElementById('dashboard');
+                if (dashboard) {
+                  dashboard.setAttribute('position', '0 0 -1.2');
+                }
               })
               .catch(error => {
                 console.error("Error al entrar a VR:", error);
@@ -931,69 +786,20 @@
       
       // Configurar botón de permisos
       orientationBtn.addEventListener('click', () => {
-        if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-          // Para iOS, necesitamos un evento de usuario para solicitar permisos
-          DeviceOrientationEvent.requestPermission()
-            .then(permissionState => {
-              if (permissionState === 'granted') {
-                initVR();
-              }
-            })
-            .catch(console.error);
-        } else {
-          initVR();
-        }
+        initVR();
       });
-      
-      // Configurar eventos de VR
-      const scene = document.querySelector('a-scene');
-      if (scene) {
-        scene.addEventListener('enter-vr', () => {
-          isVRMode = true;
-          adjustDashboardForVR();
-        });
-        
-        scene.addEventListener('exit-vr', () => {
-          isVRMode = false;
-          restoreDashboardPosition();
-        });
-      }
       
       // Conectar al broker HiveMQ
       connectToHiveMQ();
-    });
-    
-    // Manejar la rotación del dispositivo para mejorar la experiencia VR
-    window.addEventListener('deviceorientation', function(event) {
-      // Solo procesar si estamos en VR y es un dispositivo móvil
-      if (isVRMode && isMobile) {
-        // Ajustar sensibilidad para móviles
-        const alpha = event.alpha * 0.7; // Menos sensible en el eje Z
-        const beta = event.beta * 0.8;  // Menos sensible en el eje X
-        const gamma = event.gamma * 0.8; // Menos sensible en el eje Y
-        
-        // Aplicar rotación a la cámara
-        if (camera) {
-          camera.setAttribute('rotation', {
-            x: beta,
-            y: alpha,
-            z: gamma
-          });
-        }
-      }
-    }, true);
-    
-    // Optimizar para el rendimiento en móviles
-    if (isMobile) {
-      // Reducir la tasa de fotogramas en móviles para ahorrar batería
-      AFRAME.scenes[0].setAttribute('rendering', 'fps: 60');
       
-      // Desactivar sombras en móviles para mejor rendimiento
-      const lights = document.querySelectorAll('[light]');
-      lights.forEach(light => {
-        light.setAttribute('light', 'castShadow: false');
-      });
-    }
+      // Asegurar que el dashboard esté visible después de 1 segundo
+      setTimeout(() => {
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+          dashboard.setAttribute('position', '0 0 -1.5');
+        }
+      }, 1000);
+    });
   </script>
 </body>
 </html>
