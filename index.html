@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD FUNCIONAL AL 100%</title>
+  <title>HORUS STATION - DASHBOARD FUNCIONAL EN ESCRITORIO Y VR</title>
   
   <!-- Cargar A-Frame 1.4.2 desde CDN -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -353,7 +353,7 @@
     
     <!-- CONFIGURACIÓN CORREGIDA - POSICIÓN DE LA CÁMARA PARA A-FRAME 1.4.2 -->
     <a-entity id="camera-rig" position="0 1.6 0">
-      <a-entity id="camera" camera="fov: 80" look-controls>
+      <a-entity id="camera" camera="fov: 85" look-controls>
         <a-cursor 
           raycaster="objects: .sensor-card" 
           color="#00eaff" 
@@ -364,8 +364,8 @@
       </a-entity>
     </a-entity>
     
-    <!-- Panel de datos - POSICIÓN AJUSTADA PARA VISIBILIDAD INMEDIATA -->
-    <a-entity id="dashboard" position="0 1.6 -1.5" rotation="0 0 0">
+    <!-- Panel de datos - POSICIÓN AJUSTADA PARA VISIBILIDAD EN ESCRITORIO -->
+    <a-entity id="dashboard" position="0 1.5 -1.2" rotation="0 0 0">
       <!-- Temperatura -->
       <a-entity position="-1.6 0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
@@ -565,7 +565,7 @@
             // Ajustar posición para VR
             const dashboard = document.getElementById('dashboard');
             if (dashboard) {
-              dashboard.setAttribute('position', '0 1.7 -1.2');
+              dashboard.setAttribute('position', '0 1.6 -1.0');
             }
           })
           .catch(error => {
@@ -638,12 +638,12 @@
       const cameraRig = document.getElementById('camera-rig');
       
       if (dashboard) {
-        dashboard.setAttribute('position', '0 1.7 -1.2');
+        dashboard.setAttribute('position', '0 1.6 -1.0');
       }
       
       if (cameraRig) {
-        // Ajustar altura del usuario en VR para mejor comodidad
-        cameraRig.setAttribute('position', '0 1.4 0');
+        // BAJAR LA CÁMARA EN VR (de 1.4 a 1.2 metros)
+        cameraRig.setAttribute('position', '0 1.2 0');
       }
     }
     
@@ -653,7 +653,8 @@
       const cameraRig = document.getElementById('camera-rig');
       
       if (dashboard) {
-        dashboard.setAttribute('position', '0 1.6 -1.5');
+        // POSICIÓN AJUSTADA PARA ESCRITORIO (más cerca y ligeramente más baja)
+        dashboard.setAttribute('position', '0 1.5 -1.2');
       }
       
       if (cameraRig) {
@@ -677,7 +678,8 @@
       const cameraRig = document.getElementById('camera-rig');
       
       if (dashboard) {
-        dashboard.setAttribute('position', '0 1.6 -1.5');
+        // POSICIÓN AJUSTADA PARA ESCRITORIO (más cerca y ligeramente más baja)
+        dashboard.setAttribute('position', '0 1.5 -1.2');
       }
       
       if (cameraRig) {
@@ -835,7 +837,8 @@
         const cameraRig = document.getElementById('camera-rig');
         
         if (dashboard) {
-          dashboard.setAttribute('position', '0 1.6 -1.5');
+          // POSICIÓN AJUSTADA PARA ESCRITORIO (más cerca y ligeramente más baja)
+          dashboard.setAttribute('position', '0 1.5 -1.2');
         }
         
         if (cameraRig) {
