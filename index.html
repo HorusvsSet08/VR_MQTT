@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - VISIBLE AL 100%</title>
+  <title>HORUS STATION - DASHBOARD FUNCIONAL</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
-  <script src="js/aframe.js"></script>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   
-  <!-- Cargar paho.js -->
-  <script src="js/paho.js"></script>
+  <!-- Cargar paho.js desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="application/javascript"></script>
   
   <!-- Biblioteca para el joystick -->
-  <script src="js/nipple.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
   
   <style>
     :root {
@@ -59,7 +59,7 @@
       visibility: hidden !important;
     }
     
-    /* Indicador de conexión optimizado para móvil */
+    /* Indicador de conexión */
     #connection-status {
       position: fixed;
       top: 15px;
@@ -115,7 +115,7 @@
       letter-spacing: 0.3px;
     }
     
-    /* Botón VR - SOLO PARA MÓVILES - OPTIMIZADO */
+    /* Botón VR - SOLO PARA MÓVILES */
     #vr-button {
       position: fixed;
       bottom: 20px;
@@ -145,7 +145,7 @@
       box-shadow: 0 0 18px rgba(0, 234, 255, 0.6);
     }
     
-    /* Joystick REALISTA - SOLO PARA MÓVILES - TAMAÑO ÓPTIMO */
+    /* Joystick REALISTA - SOLO PARA MÓVILES */
     #joystick-container {
       position: fixed;
       left: 25px;
@@ -156,7 +156,7 @@
       display: none;
     }
     
-    /* Panel de datos 3D - DISEÑO PARA MÓVIL */
+    /* Panel de datos 3D */
     .sensor-card {
       position: relative;
       overflow: hidden;
@@ -216,15 +216,6 @@
       letter-spacing: 0.5px;
     }
     
-    /* Partículas en el fondo - OPTIMIZADAS PARA MÓVIL */
-    .background-particle {
-      position: fixed;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: -1;
-      opacity: 0.4;
-    }
-    
     /* Estilo para el loader */
     .loader {
       position: fixed;
@@ -262,7 +253,7 @@
       text-shadow: 0 0 8px var(--primary-glow);
     }
     
-    /* Overlay para solicitar permisos de orientación - MÁS GRANDE PARA MÓVIL */
+    /* Overlay para solicitar permisos de orientación */
     .orientation-permission {
       position: fixed;
       top: 0;
@@ -357,14 +348,14 @@
     <button class="orientation-btn" id="orientation-btn">Permitir</button>
   </div>
 
-  <!-- Escena 3D - POSICIONAMIENTO CORREGIDO -->
+  <!-- Escena 3D - CONFIGURACIÓN CORRECTA PARA A-FRAME 1.4.2 -->
   <a-scene embedded style="width: 100%; height: 100vh;" 
            vr-mode-ui="enabled: false"
            loading-screen="enabled: false">
     
-    <!-- CONFIGURACIÓN CORREGIDA - POSICIÓN DE LA CÁMARA AJUSTADA -->
-    <a-entity id="camera-rig" position="0 0 0">
-      <a-entity id="camera" camera="fov: 80; user-height: 0" look-controls>
+    <!-- CONFIGURACIÓN CORREGIDA - POSICIÓN DE LA CÁMARA PARA A-FRAME 1.4.2 -->
+    <a-entity id="camera-rig" position="0 1.6 0">
+      <a-entity id="camera" camera="fov: 80" look-controls>
         <a-cursor 
           raycaster="objects: .sensor-card" 
           color="#00eaff" 
@@ -376,7 +367,7 @@
     </a-entity>
     
     <!-- Panel de datos - POSICIÓN AJUSTADA PARA VISIBILIDAD INMEDIATA -->
-    <a-entity id="dashboard" position="0 0 -1.5" rotation="0 0 0">
+    <a-entity id="dashboard" position="0 1.6 -1.5" rotation="0 0 0">
       <!-- Temperatura -->
       <a-entity position="-1.6 0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
@@ -478,10 +469,10 @@
     </a-entity>
   </a-scene>
 
-  <!-- Loader de conexión minimalista -->
+  <!-- Loader de conexión -->
   <div class="loader" id="loader">
     <div class="loader-spinner"></div>
-    <div class="loader-text">CARGANDO DASHBOARD</div>
+    <div class="loader-text">CONECTANDO A HIVE MQ</div>
   </div>
 
   <script>
@@ -569,7 +560,7 @@
       }
     }
     
-    // Solicitar permiso de orientación para VR en móviles - MÉTODO SIMPLIFICADO
+    // Solicitar permiso de orientación para VR en móviles
     function requestOrientationPermission() {
       orientationPermission.style.display = 'flex';
     }
@@ -589,7 +580,7 @@
             // Ajustar posición para VR
             const dashboard = document.getElementById('dashboard');
             if (dashboard) {
-              dashboard.setAttribute('position', '0 0 -1.2');
+              dashboard.setAttribute('position', '0 1.7 -1.2');
             }
           })
           .catch(error => {
@@ -604,7 +595,7 @@
       }
     }
     
-    // Inicializar el joystick REALISTA para móviles - SIMPLIFICADO
+    // Inicializar el joystick REALISTA para móviles
     function initJoystick() {
       if (!isMobile) return;
       
@@ -656,6 +647,36 @@
       });
     }
     
+    // Ajustar posición del dashboard para VR
+    function adjustDashboardForVR() {
+      const dashboard = document.getElementById('dashboard');
+      const cameraRig = document.getElementById('camera-rig');
+      
+      if (dashboard) {
+        dashboard.setAttribute('position', '0 1.7 -1.2');
+      }
+      
+      if (cameraRig) {
+        // Ajustar altura del usuario en VR para mejor comodidad
+        cameraRig.setAttribute('position', '0 1.4 0');
+      }
+    }
+    
+    // Restaurar posición del dashboard
+    function restoreDashboardPosition() {
+      const dashboard = document.getElementById('dashboard');
+      const cameraRig = document.getElementById('camera-rig');
+      
+      if (dashboard) {
+        dashboard.setAttribute('position', '0 1.6 -1.5');
+      }
+      
+      if (cameraRig) {
+        // Restaurar altura estándar del usuario
+        cameraRig.setAttribute('position', '0 1.6 0');
+      }
+    }
+    
     // Configurar la interfaz según el dispositivo
     function setupDeviceInterface() {
       if (isMobile) {
@@ -668,12 +689,18 @@
       
       // Asegurar que el dashboard esté visible
       const dashboard = document.getElementById('dashboard');
+      const cameraRig = document.getElementById('camera-rig');
+      
       if (dashboard) {
-        dashboard.setAttribute('position', '0 0 -1.5');
+        dashboard.setAttribute('position', '0 1.6 -1.5');
+      }
+      
+      if (cameraRig) {
+        cameraRig.setAttribute('position', '0 1.6 0');
       }
     }
     
-    // Conectar al broker HiveMQ usando PAHO.MQTT (SIMPLIFICADO)
+    // Conectar al broker HiveMQ usando PAHO.MQTT
     function connectToHiveMQ() {
       // URL del broker HiveMQ
       const brokerUrl = "broker.hivemq.com";
@@ -771,10 +798,7 @@
             scene.enterVR()
               .then(() => {
                 isVRMode = true;
-                const dashboard = document.getElementById('dashboard');
-                if (dashboard) {
-                  dashboard.setAttribute('position', '0 0 -1.2');
-                }
+                adjustDashboardForVR();
               })
               .catch(error => {
                 console.error("Error al entrar a VR:", error);
@@ -786,8 +810,33 @@
       
       // Configurar botón de permisos
       orientationBtn.addEventListener('click', () => {
-        initVR();
+        if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          // Para iOS, necesitamos un evento de usuario para solicitar permisos
+          DeviceOrientationEvent.requestPermission()
+            .then(permissionState => {
+              if (permissionState === 'granted') {
+                initVR();
+              }
+            })
+            .catch(console.error);
+        } else {
+          initVR();
+        }
       });
+      
+      // Configurar eventos de VR
+      const scene = document.querySelector('a-scene');
+      if (scene) {
+        scene.addEventListener('enter-vr', () => {
+          isVRMode = true;
+          adjustDashboardForVR();
+        });
+        
+        scene.addEventListener('exit-vr', () => {
+          isVRMode = false;
+          restoreDashboardPosition();
+        });
+      }
       
       // Conectar al broker HiveMQ
       connectToHiveMQ();
@@ -795,11 +844,37 @@
       // Asegurar que el dashboard esté visible después de 1 segundo
       setTimeout(() => {
         const dashboard = document.getElementById('dashboard');
+        const cameraRig = document.getElementById('camera-rig');
+        
         if (dashboard) {
-          dashboard.setAttribute('position', '0 0 -1.5');
+          dashboard.setAttribute('position', '0 1.6 -1.5');
+        }
+        
+        if (cameraRig) {
+          cameraRig.setAttribute('position', '0 1.6 0');
         }
       }, 1000);
     });
+    
+    // Manejar la rotación del dispositivo para mejorar la experiencia VR
+    window.addEventListener('deviceorientation', function(event) {
+      // Solo procesar si estamos en VR y es un dispositivo móvil
+      if (isVRMode && isMobile) {
+        // Ajustar sensibilidad para móviles
+        const alpha = event.alpha * 0.7; // Menos sensible en el eje Z
+        const beta = event.beta * 0.8;  // Menos sensible en el eje X
+        const gamma = event.gamma * 0.8; // Menos sensible en el eje Y
+        
+        // Aplicar rotación a la cámara
+        if (camera) {
+          camera.setAttribute('rotation', {
+            x: beta,
+            y: alpha,
+            z: gamma
+          });
+        }
+      }
+    }, true);
   </script>
 </body>
 </html>
