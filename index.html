@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD LIMPIO</title>
+  <title>HORUS STATION - DASHBOARD CLARO CON PARTÍCULAS</title>
   
   <!-- Cargar A-Frame 1.4.2 -->
   <script src="js/aframe.js"></script>
@@ -20,15 +20,15 @@
       --primary-glow: #00ffff33;
       --secondary: #7e57c2;
       --dark-bg: #000a1a;
-      --card-bg: #152540;
-      --dashboard-bg: rgba(8, 30, 60, 0.85);
+      --card-bg: #1a3355; /* Más claro que antes */
+      --dashboard-bg: rgba(15, 45, 85, 0.88); /* Más claro que antes */
       --text: #e0e0e0;
-      --text-secondary: #c0c0c0;
+      --text-secondary: #d0d0d0; /* Más claro que antes */
       --border-radius: 12px;
       --transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-      --shadow: 0 10px 25px rgba(0, 15, 40, 0.5);
-      --glow: 0 0 20px rgba(0, 234, 255, 0.6);
-      --inner-shadow: inset 0 3px 15px rgba(0, 5, 20, 0.7);
+      --shadow: 0 8px 20px rgba(0, 10, 30, 0.4);
+      --glow: 0 0 15px rgba(0, 234, 255, 0.5);
+      --inner-shadow: inset 0 3px 12px rgba(0, 5, 20, 0.6);
       --hover-scale: 1.02;
     }
     
@@ -57,12 +57,12 @@
       left: 15px;
       z-index: 1000;
       padding: 8px 12px;
-      background: rgba(0, 10, 30, 0.7);
+      background: rgba(0, 15, 40, 0.8);
       border-radius: 20px;
       display: flex;
       align-items: center;
       gap: 8px;
-      border: 1px solid rgba(0, 234, 255, 0.2);
+      border: 1px solid rgba(0, 234, 255, 0.3);
       backdrop-filter: blur(5px);
     }
     
@@ -154,16 +154,16 @@
       background: var(--card-bg);
       padding: 15px 18px;
       text-align: center;
-      box-shadow: var(--inner-shadow), 0 8px 20px rgba(0, 0, 0, 0.25);
+      box-shadow: var(--inner-shadow), 0 6px 15px rgba(0, 0, 0, 0.2);
       transition: var(--transition);
-      border: 1px solid rgba(0, 234, 255, 0.1);
+      border: 1px solid rgba(0, 234, 255, 0.15);
       transform-style: preserve-3d;
       perspective: 1000px;
     }
     
     .sensor-card:hover {
       transform: translateY(-5px) scale(var(--hover-scale));
-      box-shadow: var(--inner-shadow), 0 12px 30px rgba(0, 100, 200, 0.3);
+      box-shadow: var(--inner-shadow), 0 10px 25px rgba(0, 100, 200, 0.35);
       border-color: var(--primary);
     }
     
@@ -174,10 +174,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 71, 119, 0.15);
+      background: rgba(0, 71, 119, 0.2);
       border-radius: 10px;
       margin: 0 auto 8px;
-      border: 1px solid rgba(0, 234, 255, 0.15);
+      border: 1px solid rgba(0, 234, 255, 0.2);
     }
     
     .sensor-name {
@@ -194,7 +194,7 @@
       font-weight: bold;
       color: var(--primary);
       line-height: 1.2;
-      text-shadow: 0 0 10px var(--primary-glow);
+      text-shadow: 0 0 8px var(--primary-glow);
       transition: var(--transition);
     }
     
@@ -206,16 +206,30 @@
       letter-spacing: 0.5px;
     }
     
-    /* Fondo del dashboard */
-    #dashboard-background {
+    /* Efecto de brillo en las tarjetas */
+    .glow-effect {
       position: absolute;
-      width: 100%;
-      height: 100%;
-      background: var(--dashboard-bg);
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, var(--primary), transparent 70%);
+      opacity: 0.08;
+      pointer-events: none;
+      animation: glow-move 8s infinite alternate;
+      z-index: 0;
+    }
+    
+    @keyframes glow-move {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(10px, 10px); }
+    }
+    
+    /* Partículas en el fondo */
+    .background-particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
       z-index: -1;
+      opacity: 0.4;
     }
     
     /* Estilo para el loader */
@@ -371,6 +385,7 @@
     <a-entity id="dashboard" position="0 0 -2.0" rotation="0 0 0">
       <!-- Temperatura -->
       <a-entity position="-1.8 0.8 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌡️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="TEMP" color="#FF5722" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -381,6 +396,7 @@
       
       <!-- Humedad -->
       <a-entity position="-0.6 0.8 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="💧" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="HUM" color="#2196F3" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -391,6 +407,7 @@
       
       <!-- Presión -->
       <a-entity position="0.6 0.8 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🔽" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PRES" color="#9E9E9E" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -401,6 +418,7 @@
       
       <!-- Altitud -->
       <a-entity position="-1.8 0 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="⛰️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="ALT" color="#673AB7" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -411,6 +429,7 @@
       
       <!-- Gas -->
       <a-entity position="-0.6 0 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="⛽" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="GAS" color="#FFEB3B" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -421,6 +440,7 @@
       
       <!-- Lluvia -->
       <a-entity position="0.6 0 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌧️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="LLUVIA" color="#2196F3" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -430,6 +450,7 @@
       
       <!-- PM2.5 -->
       <a-entity position="-1.8 -0.8 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PM2.5" color="#9C27B0" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -440,6 +461,7 @@
       
       <!-- PM10 -->
       <a-entity position="-0.6 -0.8 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌫️" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="PM10" color="#673AB7" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -450,6 +472,7 @@
       
       <!-- Dirección del Viento -->
       <a-entity position="0.6 -0.8 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="🌀" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="VIENTO" color="#03A9F4" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -460,6 +483,7 @@
       
       <!-- Velocidad del Viento -->
       <a-entity position="-1.8 -1.6 0.1" class="sensor-card">
+        <div class="glow-effect"></div>
         <a-entity class="sensor-header">
           <a-text value="💨" position="-0.5 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
           <a-text value="VEL. VIENTO" color="#4CAF50" position="0 0.2 0.1" align="center" width="1.2" font="roboto"></a-text>
@@ -470,6 +494,9 @@
     </a-entity>
   </a-scene>
 
+  <!-- Partículas en el fondo -->
+  <div id="background-particles"></div>
+  
   <!-- Loader de conexión minimalista -->
   <div class="loader" id="loader">
     <div class="loader-spinner"></div>
@@ -497,6 +524,78 @@
     const joystickContainer = document.getElementById('joystick-container');
     const orientationPermission = document.getElementById('orientation-permission');
     const orientationBtn = document.getElementById('orientation-btn');
+    
+    // Crear partículas en el fondo
+    function createBackgroundParticles() {
+      const container = document.getElementById('background-particles');
+      const particleCount = 50; // Número reducido de partículas para no saturar
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'background-particle';
+        
+        // Propiedades aleatorias
+        const size = Math.random() * 3 + 1;
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const opacity = Math.random() * 0.3 + 0.1;
+        const color = Math.random() > 0.5 ? 'rgba(0, 234, 255, 0.5)' : 'rgba(126, 87, 194, 0.5)';
+        const speed = Math.random() * 0.5 + 0.1;
+        const direction = Math.random() * 360;
+        
+        // Estilos
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${x}%`;
+        particle.style.top = `${y}%`;
+        particle.style.opacity = opacity;
+        particle.style.backgroundColor = color;
+        
+        // Guardar propiedades para la animación
+        particle.dataset.speed = speed;
+        particle.dataset.direction = direction;
+        particle.dataset.x = x;
+        particle.dataset.y = y;
+        
+        container.appendChild(particle);
+      }
+      
+      // Iniciar animación
+      animateParticles();
+    }
+    
+    // Animar las partículas
+    function animateParticles() {
+      const particles = document.querySelectorAll('.background-particle');
+      
+      particles.forEach(particle => {
+        let x = parseFloat(particle.dataset.x);
+        let y = parseFloat(particle.dataset.y);
+        const speed = parseFloat(particle.dataset.speed);
+        const direction = parseFloat(particle.dataset.direction);
+        
+        // Calcular nuevo movimiento
+        x += Math.cos(direction * Math.PI / 180) * speed;
+        y += Math.sin(direction * Math.PI / 180) * speed;
+        
+        // Mantener dentro de los límites
+        if (x > 100) x = 0;
+        if (x < 0) x = 100;
+        if (y > 100) y = 0;
+        if (y < 0) y = 100;
+        
+        // Actualizar posición
+        particle.style.left = `${x}%`;
+        particle.style.top = `${y}%`;
+        
+        // Actualizar datos
+        particle.dataset.x = x;
+        particle.dataset.y = y;
+      });
+      
+      // Continuar animación
+      requestAnimationFrame(animateParticles);
+    }
     
     // Actualizar estado de conexión con animación
     function updateConnectionStatus(connected, message = "") {
@@ -723,6 +822,9 @@
     
     // Inicializar la aplicación
     window.addEventListener('load', () => {
+      // Crear partículas en el fondo
+      createBackgroundParticles();
+      
       // Configurar interfaz según el dispositivo
       setupDeviceInterface();
       
