@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD SIEMPRE VISIBLE</title>
+  <title>HORUS STATION - DASHBOARD FUNCIONAL AL 100%</title>
   
   <!-- Cargar A-Frame 1.4.2 desde CDN -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -798,13 +798,18 @@
       orientationBtn.addEventListener('click', () => {
         if (isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
           // Para iOS, necesitamos un evento de usuario para solicitar permisos
-          DeviceOrientationEvent.requestPermission()
-            .then(permissionState => {
-              if (permissionState === 'granted') {
-                initVR();
-              }
-            })
-            .catch(console.error);
+          if (typeof DeviceOrientationEvent !== 'undefined' && 
+              typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+              .then(permissionState => {
+                if (permissionState === 'granted') {
+                  initVR();
+                }
+              })
+              .catch(console.error);
+          } else {
+            initVR();
+          }
         } else {
           initVR();
         }
