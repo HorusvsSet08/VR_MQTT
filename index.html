@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD ULTRA COMPATIBLE</title>
+  <title>HORUS STATION - MOVIMIENTO PERFECTO EN MÓVIL</title>
   
-  <!-- Cargar A-Frame 1.4.2 (compatible con dispositivos antiguos) -->
+  <!-- Cargar A-Frame 1.4.2 con configuración óptima para móviles -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   
   <!-- Cargar mqtt.js desde CDN -->
@@ -315,6 +315,50 @@
       border: none;
       background: rgba(21, 37, 64, 0.8);
     }
+    
+    /* Overlay para solicitar permisos de orientación */
+    .orientation-permission {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 10, 30, 0.9);
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .orientation-permission h3 {
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+    
+    .orientation-permission p {
+      margin-bottom: 20px;
+      max-width: 300px;
+    }
+    
+    .orientation-btn {
+      background: var(--primary);
+      color: #000;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .orientation-btn:hover {
+      transform: scale(1.05);
+      box-shadow: var(--glow);
+    }
   </style>
 </head>
 <body>
@@ -345,14 +389,22 @@
     <p>Presiona <span class="action">VR</span> para modo realidad virtual</p>
     <p>Usa los botones de dirección para movimiento preciso</p>
   </div>
+  
+  <!-- Overlay para solicitar permisos de orientación -->
+  <div class="orientation-permission" id="orientation-permission">
+    <h3>📱 Permiso de Orientación Necesario</h3>
+    <p>Para usar el modo VR, necesitamos acceso a la orientación de tu dispositivo.</p>
+    <p>Este es un requisito de seguridad de los navegadores modernos.</p>
+    <button class="orientation-btn" id="orientation-btn">Solicitar Permiso</button>
+  </div>
 
   <!-- Escena 3D -->
   <a-scene id="main-scene" embedded style="width: 100%; height: 100vh;" 
-           vr-mode-ui="enabled: true; enterVRButton: #vr-button"
+           vr-mode-ui="enabled: true; enterVRButton: #vr-button; enterARButton: #ar-button; enterVRButton: .a-enter-vr-button"
            device-orientation-permission-ui="enabled: true"
            loading-screen="dotsColor: #00eaff; backgroundColor: #000a1a">
     <a-entity id="camera-rig" position="0 1.6 0">
-      <a-entity id="camera" camera="fov: 80; userHeight: 1.6" look-controls="pointerLockEnabled: false; reverseMouseDrag: false">
+      <a-entity id="camera" camera="fov: 80; userHeight: 1.6" look-controls="pointerLockEnabled: false; reverseMouseDrag: false; touchEnabled: true; magicWindowTrackingEnabled: true; hmdEnabled: true">
         <a-cursor 
           raycaster="objects: .sensor-card" 
           color="#00eaff" 
@@ -498,8 +550,9 @@
     let cameraRig, camera;
     let isVRMode = false;
     let joystick;
-    let movementSpeed = 0.04; // Velocidad de movimiento ajustada
+    let movementSpeed = 0.05; // Velocidad de movimiento ajustada
     let isMoving = false;
+    let vrPermissionRequested = false;
     
     // Elementos UI
     const connectionLed = document.getElementById('connection-led');
@@ -507,6 +560,8 @@
     const loader = document.getElementById('loader');
     const loaderText = document.querySelector('.loader-text');
     const mobileHelp = document.getElementById('mobile-help');
+    const orientationPermission = document.getElementById('orientation-permission');
+    const orientationBtn = document.getElementById('orientation-btn');
     
     // Verificar si es un dispositivo de baja potencia (como PCs de 32 bits)
     function checkLowPowerDevice() {
@@ -567,6 +622,30 @@
       }
     }
     
+    // Solicitar permiso de orientación para VR en móviles
+    function requestOrientationPermission() {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        orientationPermission.style.display = 'flex';
+      } else {
+        // El navegador no requiere permiso explícito
+        initVR();
+      }
+    }
+    
+    // Inicializar VR después de obtener permisos
+    function initVR() {
+      orientationPermission.style.display = 'none';
+      vrPermissionRequested = true;
+      
+      const scene = document.querySelector('a-scene');
+      if (scene) {
+        // Forzar la entrada en modo VR
+        if (scene.enterVR) {
+          scene.enterVR();
+        }
+      }
+    }
+    
     // Inicializar el joystick para móviles con mejoras
     function initJoystick() {
       if (!isMobile) return;
@@ -590,7 +669,7 @@
       joystick = nipplejs.create({
         zone: document.getElementById('joystick-container'),
         size: 110,
-        threshold: 0.15,  // Aumentado para evitar movimientos accidentales
+        threshold: 0.2,  // Aumentado para evitar movimientos accidentales
         color: 'rgba(0, 234, 255, 0.7)',
         fadeTime: 250,
         position: {left: '50%', top: '50%'}
@@ -604,7 +683,7 @@
         const force = data.force;
         
         // Ajustar velocidad de movimiento para mayor comodidad
-        const moveSpeed = movementSpeed * force;
+        const moveSpeed = movementSpeed * force * 1.5; // Aumentado para mejor respuesta
         const dx = Math.sin(angle) * moveSpeed;
         const dz = Math.cos(angle) * moveSpeed;
         
@@ -638,7 +717,7 @@
       // Movimiento hacia adelante
       forwardBtn.addEventListener('touchstart', () => {
         isMoving = true;
-        moveInDirection(0, 0, -movementSpeed * 1.5);
+        moveInDirection(0, 0, -movementSpeed * 2.0);
       });
       
       forwardBtn.addEventListener('touchend', () => {
@@ -648,7 +727,7 @@
       // Movimiento hacia atrás
       backwardBtn.addEventListener('touchstart', () => {
         isMoving = true;
-        moveInDirection(0, 0, movementSpeed * 1.5);
+        moveInDirection(0, 0, movementSpeed * 2.0);
       });
       
       backwardBtn.addEventListener('touchend', () => {
@@ -658,7 +737,7 @@
       // Movimiento a la izquierda
       leftBtn.addEventListener('touchstart', () => {
         isMoving = true;
-        moveInDirection(-movementSpeed * 1.5, 0, 0);
+        moveInDirection(-movementSpeed * 2.0, 0, 0);
       });
       
       leftBtn.addEventListener('touchend', () => {
@@ -668,7 +747,7 @@
       // Movimiento a la derecha
       rightBtn.addEventListener('touchstart', () => {
         isMoving = true;
-        moveInDirection(movementSpeed * 1.5, 0, 0);
+        moveInDirection(movementSpeed * 2.0, 0, 0);
       });
       
       rightBtn.addEventListener('touchend', () => {
@@ -691,7 +770,7 @@
           if (isMoving) {
             moveInDirection(x, y, z);
           }
-        }, 30);
+        }, 20);
       }
     }
     
@@ -812,24 +891,43 @@
       
       // Configurar interfaz para móviles
       if (isMobile) {
+        // Configurar botón para solicitar permiso de orientación
+        orientationBtn.addEventListener('click', () => {
+          if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+              .then(permissionState => {
+                if (permissionState === 'granted') {
+                  initVR();
+                }
+              })
+              .catch(console.error);
+          } else {
+            initVR();
+          }
+        });
+        
+        // Detectar si necesitamos solicitar permisos para VR
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          requestOrientationPermission();
+        }
+        
         // Ajustar configuración de A-Frame para móviles
-        AFRAME.utils.device.checkHeadsetConnected(() => {
-          // Configuración específica para móviles
+        setTimeout(() => {
           const scene = document.querySelector('a-scene');
           if (scene) {
             // Ajustar parámetros de rendimiento para móviles
             scene.setAttribute('renderer', 'antialias: true; sortObjects: true; maxCanvasWidth: 2048; maxCanvasHeight: 2048');
+            
+            // Asegurar que los controles táctiles están habilitados
+            const camera = document.getElementById('camera');
+            if (camera) {
+              camera.setAttribute('look-controls', 'touchEnabled: true; mouseEnabled: false; hmdEnabled: true');
+            }
+            
+            // Inicializar elementos
+            initJoystick();
           }
-          
-          // Inicializar elementos
-          initJoystick();
-          
-          // Ajustar sensibilidad de la cámara para móviles
-          const camera = document.getElementById('camera');
-          if (camera) {
-            camera.setAttribute('look-controls', 'hmdEnabled: true; touchEnabled: true; mouseEnabled: false; reverseMouseDrag: false');
-          }
-        });
+        }, 1000);
       }
       
       // Configurar eventos de VR
@@ -838,11 +936,28 @@
         scene.addEventListener('enter-vr', () => {
           isVRMode = true;
           adjustDashboardForVR();
+          
+          // En móviles, asegurar que los controles táctiles están habilitados en VR
+          if (isMobile) {
+            const camera = document.getElementById('camera');
+            if (camera) {
+              camera.setAttribute('look-controls', 'touchEnabled: true; mouseEnabled: false; hmdEnabled: true');
+            }
+          }
         });
         
         scene.addEventListener('exit-vr', () => {
           isVRMode = false;
           restoreDashboardPosition();
+        });
+        
+        // Botón VR personalizado para móviles
+        document.getElementById('vr-button').addEventListener('click', () => {
+          if (isMobile && !vrPermissionRequested) {
+            requestOrientationPermission();
+          } else if (scene.enterVR) {
+            scene.enterVR();
+          }
         });
       }
       
