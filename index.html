@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HORUS STATION - DASHBOARD CON PAHO.MQTT</title>
+  <title>HORUS STATION - DASHBOARD COMPLETO</title>
   
   <!-- Cargar A-Frame 1.4.2 desde carpeta local -->
   <script src="js/aframe.js"></script>
@@ -316,62 +316,92 @@
     <!-- Panel de datos - POSICIÓN OPTIMIZADA PARA ESCRITORIO Y MÓVIL -->
     <a-entity id="dashboard" position="0 1.3 -2.2">
       <!-- Temperatura -->
-      <a-entity position="-1.7 0.6 0.1" class="sensor-card">
+      <a-entity position="-2 0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
-          <a-text value="🌡️" position="-0.45 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
-          <a-text value="TEMP" color="#FF5722" position="0 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
+          <a-text value="🌡️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="TEMP" color="#FF5722" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="temp-value" value="--" color="#FF5722" position="0 -0.05 0.1" align="center" width="1.2" font="exo2bold"></a-text>
-        <a-text value="°C" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.2" font="roboto" class="unit"></a-text>
+        <a-text id="temp-value" value="--" color="#FF5722" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="°C" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Humedad -->
-      <a-entity position="-0.55 0.6 0.1" class="sensor-card">
+      <a-entity position="-0.5 0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
-          <a-text value="💧" position="-0.45 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
-          <a-text value="HUM" color="#2196F3" position="0 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
+          <a-text value="💧" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="HUM" color="#2196F3" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="hum-value" value="--" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.2" font="exo2bold"></a-text>
-        <a-text value="%" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.2" font="roboto" class="unit"></a-text>
+        <a-text id="hum-value" value="--" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="%" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Presión -->
-      <a-entity position="0.6 0.6 0.1" class="sensor-card">
+      <a-entity position="1 0.7 0.1" class="sensor-card">
         <a-entity class="sensor-header">
-          <a-text value="🔽" position="-0.45 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
-          <a-text value="PRES" color="#9E9E9E" position="0 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
+          <a-text value="🔽" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="PRES" color="#9E9E9E" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="press-value" value="--" color="#9E9E9E" position="0 -0.05 0.1" align="center" width="1.2" font="exo2bold"></a-text>
-        <a-text value="hPa" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.2" font="roboto" class="unit"></a-text>
+        <a-text id="press-value" value="--" color="#9E9E9E" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="hPa" color="#a0a0a0" position="0.5 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Altitud -->
-      <a-entity position="-1.7 -0.2 0.1" class="sensor-card">
+      <a-entity position="-2 -0.3 0.1" class="sensor-card">
         <a-entity class="sensor-header">
-          <a-text value="⛰️" position="-0.45 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
-          <a-text value="ALT" color="#673AB7" position="0 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
+          <a-text value="⛰️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="ALT" color="#673AB7" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="alt-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.2" font="exo2bold"></a-text>
-        <a-text value="m" color="#a0a0a0" position="0.2 -0.05 0.1" align="center" width="1.2" font="roboto" class="unit"></a-text>
+        <a-text id="alt-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="m" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Gas -->
-      <a-entity position="-0.55 -0.2 0.1" class="sensor-card">
+      <a-entity position="-0.5 -0.3 0.1" class="sensor-card">
         <a-entity class="sensor-header">
-          <a-text value="⛽" position="-0.45 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
-          <a-text value="GAS" color="#FFEB3B" position="0 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
+          <a-text value="⛽" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="GAS" color="#FFEB3B" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="gas-value" value="--" color="#FFEB3B" position="0 -0.05 0.1" align="center" width="1.2" font="exo2bold"></a-text>
-        <a-text value="%" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.2" font="roboto" class="unit"></a-text>
+        <a-text id="gas-value" value="--" color="#FFEB3B" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="%" color="#a0a0a0" position="0.4 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
       
       <!-- Lluvia -->
-      <a-entity position="0.6 -0.2 0.1" class="sensor-card">
+      <a-entity position="1 -0.3 0.1" class="sensor-card">
         <a-entity class="sensor-header">
-          <a-text value="🌧️" position="-0.45 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
-          <a-text value="LLUVIA" color="#2196F3" position="0 0.15 0.1" align="center" width="1.2" font="roboto"></a-text>
+          <a-text value="🌧️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="LLUVIA" color="#2196F3" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
         </a-entity>
-        <a-text id="rain-value" value="no" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.2" font="exo2bold"></a-text>
+        <a-text id="rain-value" value="no" color="#2196F3" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+      </a-entity>
+      
+      <!-- PM2.5 -->
+      <a-entity position="-2 -1.3 0.1" class="sensor-card">
+        <a-entity class="sensor-header">
+          <a-text value="🌫️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="PM2.5" color="#9C27B0" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+        </a-entity>
+        <a-text id="pm25-value" value="--" color="#9C27B0" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="μg/m³" color="#a0a0a0" position="0.6 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
+      </a-entity>
+      
+      <!-- PM10 -->
+      <a-entity position="-0.5 -1.3 0.1" class="sensor-card">
+        <a-entity class="sensor-header">
+          <a-text value="🌫️" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="PM10" color="#673AB7" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+        </a-entity>
+        <a-text id="pm10-value" value="--" color="#673AB7" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="μg/m³" color="#a0a0a0" position="0.6 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
+      </a-entity>
+      
+      <!-- Dirección del Viento -->
+      <a-entity position="1 -1.3 0.1" class="sensor-card">
+        <a-entity class="sensor-header">
+          <a-text value="🌀" position="-0.6 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+          <a-text value="VIENTO" color="#03A9F4" position="0 0.25 0.1" align="center" width="1.5" font="roboto"></a-text>
+        </a-entity>
+        <a-text id="wind-value" value="--" color="#03A9F4" position="0 -0.05 0.1" align="center" width="1.5" font="exo2bold"></a-text>
+        <a-text value="°" color="#a0a0a0" position="0.3 -0.05 0.1" align="center" width="1.5" font="roboto" class="unit"></a-text>
       </a-entity>
     </a-entity>
   </a-scene>
@@ -554,21 +584,31 @@
           const topic = message.destinationName;
           const payload = message.payloadString;
           
-          // Mapeo de topics a elementos
+          // Mapeo de topics a elementos - ¡AHORA INCLUYE TODOS LOS TOPICS!
           const topicMap = {
             "horus/vvb/temperatura": "temp-value",
             "horus/vvb/humedad": "hum-value",
             "horus/vvb/presion": "press-value",
             "horus/vvb/altitud": "alt-value",
             "horus/vvb/gas": "gas-value",
-            "horus/vvb/lluvia": "rain-value"
+            "horus/vvb/lluvia": "rain-value",
+            "horus/vvb/pm25": "pm25-value",
+            "horus/vvb/pm10": "pm10-value",
+            "horus/vvb/wind_direction": "wind-value",
+            "horus/vvb/wind_speed": "wind-speed-value"
           };
           
           const elementId = topicMap[topic];
-          if (!elementId) return;
+          if (!elementId) {
+            console.log("Topic no manejado:", topic);
+            return;
+          }
           
           const element = document.getElementById(elementId);
-          if (!element) return;
+          if (!element) {
+            console.error("Elemento no encontrado para el topic:", topic);
+            return;
+          }
           
           // Actualizar el valor
           if (topic === "horus/vvb/lluvia") {
